@@ -1,0 +1,12 @@
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
+from .base import Base
+
+class Org(Base):
+    __tablename__ = 'orgs'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False, unique=True)
+    
+    # Relationships
+    users = relationship("User", back_populates="org") 
