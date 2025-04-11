@@ -7,7 +7,7 @@ from ..models import User as UserModel, IAMResource as IAMResourceModel
 from ..schemas import UserAccess
 from ..services import get_user_access
 from ..services.db import get_db
-from ..services.iam import get_access_guard_service
+from ..services.access_guard import get_access_guard_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/iam/access", tags=["iam-access"])

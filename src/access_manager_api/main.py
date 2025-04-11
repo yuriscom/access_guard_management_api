@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI
 
 from .routes import router
-from .services.iam import get_access_guard_service
+from .services.access_guard import get_access_guard_service
 
 logger = logging.getLogger(__name__)
 
