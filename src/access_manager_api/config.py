@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
     database_url: str = Field(..., env='DATABASE_URL')
-    adapter_type: Optional[str] = Field(None, env='ADAPTER_TYPE')
+    # adapter_type: Optional[str] = Field(None, env='ADAPTER_TYPE')
     rbac_model_path: Optional[str] = Field(None, env='RBAC_MODEL_PATH')
     development_mode: bool = Field(False, env='DEVELOPMENT_MODE')
     jwt_secret_key: str = Field("your-secret-key", env='JWT_SECRET_KEY')
@@ -24,10 +24,10 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         logger.info(f"Loading settings from {os.path.abspath('.env')}")
-
-    @property
-    def adapter(self):
-        return parse_adapter_type(self.adapter_type)
+    #
+    # @property
+    # def adapter(self):
+    #     return parse_adapter_type(self.adapter_type)
 
     @property
     def policy_loader_type(self):

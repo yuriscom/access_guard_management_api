@@ -16,4 +16,4 @@ def get_access_guard_enforcer():
     Returns:
         PermissionAdapter: A permissions adapter instance
     """
-    return get_permissions_enforcer(settings.adapter, get_engine(), settings=settings)
+    return get_permissions_enforcer(settings, get_engine())

@@ -1,5 +1,5 @@
 import jwt
-from access_guard.adapters import PermissionDeniedError
+from access_guard.authz.exceptions import PermissionDeniedError
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
@@ -56,7 +56,7 @@ async def get_policies(
 
     # Enforce access
     try:
-        access_guard_service.require_permission(user.name, resource, "read")
+        access_guard_service.require_permission(user, resource, "read")
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
 

@@ -18,7 +18,7 @@ async def check_permission_get(
     resource_id: int = Query(..., description="Resource ID"),
     action: str = Query(..., description="Action to check"),
     db: Session = Depends(get_db),
-    permissions = Depends(get_access_guard_enforcer)
+    access_guard_enforcer = Depends(get_access_guard_enforcer)
 ):
     """Check permission using database IDs"""
     # Get user and resource names
@@ -32,7 +32,7 @@ async def check_permission_get(
 
     logger.debug(f"Checking permission for user {user.name} on resource {resource.resource_name} with action {action}")
 
-    allowed = permissions.enforce(user.name, resource.get_policy_object(), action)
+    allowed = access_guard_enforcer.enforce(user, resource.get_policy_object(), action)
     logger.debug(f"Permission check result: {allowed}")
     
     return {
@@ -59,11 +59,11 @@ def get_user_access_info(
 
 @router.post("/refresh")
 async def refresh_policies(
-    permissions = Depends(get_access_guard_enforcer)
+    access_guard_enforcer = Depends(get_access_guard_enforcer)
 ):
     """
     Refresh the in-memory policies from the database.
     Use this endpoint when policies have been updated and need to be reloaded.
     """
-    permissions.refresh_policies()
+    access_guard_enforcer.refresh_policies()
     return {"message": "Policies refreshed successfully"}
