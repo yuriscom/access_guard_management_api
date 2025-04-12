@@ -1,5 +1,5 @@
 import logging
-from access_guard import adapters
+from access_guard.authz import get_permissions_enforcer
 
 from .db import get_engine
 from ..config import settings
@@ -7,13 +7,13 @@ from ..config import settings
 logger = logging.getLogger(__name__)
 
 
-def get_access_guard_service():
+def get_access_guard_enforcer():
     """
-    Get a permissions service instance.
+    Get Access Guard Enforcer instance.
     
     Args:
         
     Returns:
         PermissionAdapter: A permissions adapter instance
     """
-    return adapters.factory.get_permission_adapter(settings.adapter, get_engine(), settings=settings)
+    return get_permissions_enforcer(settings.adapter, get_engine(), settings=settings)

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..schemas.policies import PoliciesParams
-from ..services.access_guard import get_access_guard_service
+from ..services.access_guard import get_access_guard_enforcer
 from ..services.policies import get_policies_service
 from ..services.db import get_db
 from ..models import User as UserModel, IAMResource as IAMResourceModel
@@ -39,7 +39,7 @@ async def get_policies(
     app_id: str = Header(..., alias="app_id", description="Application ID"),
     user_id: str = Header(..., alias="user_id", description="Application Client ID"),
     scope: str = Header(..., alias="scope", description="Application Scope"),
-    access_guard_service = Depends(get_access_guard_service),
+    access_guard_service = Depends(get_access_guard_enforcer),
     policies_service = Depends(get_policies_service),
     db: Session = Depends(get_db)
 ):

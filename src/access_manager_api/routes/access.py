@@ -7,7 +7,7 @@ from ..models import User as UserModel, IAMResource as IAMResourceModel
 from ..schemas import UserAccess
 from ..services import get_user_access
 from ..services.db import get_db
-from ..services.access_guard import get_access_guard_service
+from ..services.access_guard import get_access_guard_enforcer
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/iam/access", tags=["iam-access"])
@@ -18,7 +18,7 @@ async def check_permission_get(
     resource_id: int = Query(..., description="Resource ID"),
     action: str = Query(..., description="Action to check"),
     db: Session = Depends(get_db),
-    permissions = Depends(get_access_guard_service)
+    permissions = Depends(get_access_guard_enforcer)
 ):
     """Check permission using database IDs"""
     # Get user and resource names
@@ -59,7 +59,7 @@ def get_user_access_info(
 
 @router.post("/refresh")
 async def refresh_policies(
-    permissions = Depends(get_access_guard_service)
+    permissions = Depends(get_access_guard_enforcer)
 ):
     """
     Refresh the in-memory policies from the database.
