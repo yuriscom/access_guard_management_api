@@ -1,8 +1,8 @@
-from typing import Optional
 import logging
 import os
+from typing import Optional
 
-from access_guard.utils import parse_adapter_type, parse_policy_loader_type
+from access_guard.utils import parse_policy_loader_type
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -43,4 +43,4 @@ def get_settings() -> Settings:
         _settings = Settings()
     return _settings
 
-settings = get_settings() 
+settings = get_settings()
