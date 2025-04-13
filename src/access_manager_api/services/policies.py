@@ -14,27 +14,35 @@ class PoliciesService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_policies(self, params: PoliciesParams):
+    def get_policies(self, policiesParams: PoliciesParams):
         params_dict = {
             **settings.model_dump(),  # static settings from config
             "policy_loader_type": PolicyLoaderType.DB,
             "filter": {
-                "policy_api_scope": params.scope,
-                "policy_api_appid": str(params.app_id),
-                "policy_api_userid": str(params.user_id),
+                "policy_api_scope": policiesParams.scope,
+                "policy_api_appid": str(policiesParams.app_id),
+                "policy_api_userid": str(policiesParams.user_id),
             }
         }
 
-        params = PermissionsEnforcerParams(**params_dict);
+        enforcer_settings = PermissionsEnforcerParams(**params_dict);
 
         enforcer = get_permissions_enforcer(
-            settings=params,
+            settings=enforcer_settings,
             engine=self.db.bind,
             new_instance=True,
             query_provider=AccessManagementQueryProvider()
         )
 
-        return self._extract_policies(enforcer)
+        response = {
+            "resource_prefix": "",
+            "policies": self._extract_policies(enforcer)
+        }
+
+        if policiesParams.scope and policiesParams.app_id:
+            response["resource_prefix"] = f"{policiesParams.scope}:{policiesParams.app_id}:"
+
+        return response
 
     def _extract_policies(self, enforcer) -> list:
         policies = []
