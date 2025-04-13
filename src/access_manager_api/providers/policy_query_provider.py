@@ -1,4 +1,4 @@
-from access_guard.authz.poicy_query_provider import PolicyQueryProvider
+from access_guard.authz.loaders.poicy_query_provider import PolicyQueryProvider
 from pathlib import Path
 
 def load_sql(name: str) -> str:

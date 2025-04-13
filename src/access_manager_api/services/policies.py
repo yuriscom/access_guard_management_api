@@ -1,5 +1,5 @@
-from access_guard.authz.enums import PolicyLoaderType
-from access_guard.authz.permissions_enforcer_params import PermissionsEnforcerParams
+from access_guard.authz.models.enums import PolicyLoaderType
+from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from access_guard.authz.factory import get_permissions_enforcer

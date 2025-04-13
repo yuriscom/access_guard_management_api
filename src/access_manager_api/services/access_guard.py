@@ -1,7 +1,7 @@
 import logging
 from access_guard.authz import get_permissions_enforcer
-from access_guard.authz.enums import PolicyLoaderType
-from access_guard.authz.permissions_enforcer_params import PermissionsEnforcerParams
+from access_guard.authz.models.enums import PolicyLoaderType
+from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 
 from .db import get_engine
 from ..config import settings
@@ -29,6 +29,6 @@ def get_access_guard_enforcer():
         }
     }
 
-    params = PermissionsEnforcerParams(**params_dict);
+    params = PermissionsEnforcerParams(**params_dict)
 
     return get_permissions_enforcer(params, get_engine(), query_provider=AccessManagementQueryProvider())
