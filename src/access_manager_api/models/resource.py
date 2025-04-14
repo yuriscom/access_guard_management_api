@@ -17,10 +17,6 @@ class IAMResource(Base):
     app = relationship("App", back_populates="resources")
     permissions = relationship("IAMPermission", back_populates="resource")
 
-    __table_args__ = (
-        UniqueConstraint('scope', 'app_id', 'resource_name', name='uix_scope_app_resource'),
-    )
-
     def get_policy_object(self) -> str:
         """
         Returns the policy object string representation for this resource.

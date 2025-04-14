@@ -1,11 +1,12 @@
-from sqlalchemy.orm import Session
 from typing import List, Dict, Optional
+
+from sqlalchemy.orm import Session
+
 from ..models import IAMResource, IAMRole, IAMPermission, IAMRolePolicy, UserRole, User, IAMUserPolicy
 from ..schemas import (
     IAMResourceCreate, IAMRoleCreate, IAMPermissionCreate, IAMUserPolicyCreate,
     IAMRolePolicyCreate, UserRoleCreate, UserAccess, Permission
 )
-from ..models.enums import Scope
 
 
 def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource:
@@ -14,6 +15,41 @@ def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource
     db.commit()
     db.refresh(db_resource)
     return db_resource
+
+def get_iam_resource_by_id(db: Session, resource_id: int) -> IAMResource:
+    return db.query(IAMResource).filter(IAMResource.id == resource_id).first()
+
+
+def get_iam_resources_by_scope_app(db: Session, scope: str, app_id: Optional[int]) -> List[IAMResource]:
+    query = db.query(IAMResource).filter(IAMResource.scope == scope)
+
+    if not app_id:
+        query = query.filter(IAMResource.app_id.is_(None))
+    else:
+        query = query.filter(IAMResource.app_id == app_id)
+
+    return query.all()
+
+def update_iam_resource(
+        db: Session,
+        existing: IAMResource,
+        data: IAMResourceCreate
+) -> IAMResource:
+    existing.resource_name = data.resource_name
+    existing.scope = data.scope
+    existing.app_id = data.app_id
+    existing.description = data.description
+    db.commit()
+    db.refresh(existing)
+    return existing
+
+
+def delete_iam_resource(
+        db: Session,
+        resource: IAMResource
+) -> None:
+    db.delete(resource)
+    db.commit()
 
 def create_iam_role(db: Session, role: IAMRoleCreate) -> IAMRole:
     db_role = IAMRole(**role.model_dump())

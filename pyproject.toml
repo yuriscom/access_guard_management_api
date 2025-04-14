@@ -20,6 +20,9 @@ PyJWT = ">=2.8.0,<3.0.0"
 # Add access-guard as local editable dependency
 access-guard = {path = "../access-guard", develop = true}
 
+[tool.poetry.group.dev.dependencies]
+alembic = "^1.15.2"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
