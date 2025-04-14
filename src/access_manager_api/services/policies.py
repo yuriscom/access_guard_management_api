@@ -20,8 +20,8 @@ class PoliciesService:
             "policy_loader_type": PolicyLoaderType.DB,
             "filter": {
                 "policy_api_scope": policiesParams.scope,
-                "policy_api_appid": str(policiesParams.app_id),
-                "policy_api_userid": str(policiesParams.user_id),
+                "policy_api_appid": str(policiesParams.app_id) if policiesParams.app_id is not None else None,
+                "policy_api_userid": str(policiesParams.user_id) if policiesParams.user_id is not None else None,
             }
         }
 

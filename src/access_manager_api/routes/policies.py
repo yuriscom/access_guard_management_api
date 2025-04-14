@@ -1,8 +1,12 @@
+from typing import Tuple
+
 import jwt
 from access_guard.authz.exceptions import PermissionDeniedError
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
+from . import dependencies
+from .dependencies import get_request_headers, get_user
 from ..config import settings
 from ..schemas.policies import PoliciesParams
 from ..services.access_guard import get_access_guard_enforcer
@@ -36,23 +40,20 @@ async def validate_jwt(authorization: str = Header(...)) -> dict:
 @router.get("/policies")
 async def get_policies(
     # jwt_claims: dict = Depends(validate_jwt),
-    app_id: str = Header(..., alias="app_id", description="Application ID"),
-    user_id: str = Header(..., alias="user_id", description="Application Client ID"),
-    scope: str = Header(..., alias="scope", description="Application Scope"),
+    headers: Tuple[str, int, str] = Depends(get_request_headers),
     access_guard_service = Depends(get_access_guard_enforcer),
     policies_service = Depends(get_policies_service),
-    db: Session = Depends(get_db)
+    user: UserModel = Depends(get_user)
 ):
     # Extract claims
     # user_id = jwt_claims["sub"]
     # app_id = jwt_claims.get("app_id")
 
-    user = db.query(UserModel).filter(UserModel.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
+    user_id, app_id, scope = headers
 
     # Construct the resource string
-    resource = f"SMC:{app_id}:policies"
+    resource_path = dependencies.build_resource_path("SMC", app_id)
+    resource = f"{resource_path}:policies"
 
     # Enforce access
     try:

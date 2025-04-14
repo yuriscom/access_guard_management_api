@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from access_guard.authz.exceptions import PermissionDeniedError
 from fastapi import APIRouter, Depends, HTTPException, Header
@@ -53,12 +53,12 @@ def read_resource_by_id(
 
 @router.get("/", response_model=List[IAMResource])
 def read_resources_by_scope_app(
-        user_id, app_id, scope=Depends(get_request_headers),
+        headers: Tuple[str, int, str] = Depends(get_request_headers),
         user: UserModel = Depends(get_user),
         access_guard_service=Depends(get_access_guard_enforcer),
         db: Session = Depends(get_db)
 ):
-
+    user_id, app_id, scope = headers
     try:
         resource_path = build_resource_path(scope, app_id)
         access_guard_service.require_permission(user, f"SMC:{resource_path}:iam", "read")
