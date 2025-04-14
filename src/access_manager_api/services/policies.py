@@ -40,7 +40,7 @@ class PoliciesService:
         }
 
         if policiesParams.scope and policiesParams.app_id:
-            response["resource_prefix"] = f"{policiesParams.scope}:{policiesParams.app_id}:"
+            response["resource_prefix"] = f"{policiesParams.scope}/{policiesParams.app_id}/"
 
         return response
 

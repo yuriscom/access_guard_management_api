@@ -2,7 +2,7 @@ WITH user_roles AS (
     -- Get all roles assigned to the user
     SELECT
         r.id AS role_id,
-        r.scope || ':' || COALESCE(r.app_id::text, '') || ':' || r.role_name AS role_name
+        r.scope || '/' || COALESCE(r.app_id::text, '') || '/' || r.role_name AS role_name
     FROM user_roles ur
     JOIN iam_roles r ON ur.role_id = r.id
     JOIN users u ON ur.user_id = u.id
@@ -13,7 +13,7 @@ role_permissions AS (
     SELECT
         'p' AS ptype,                                           -- Casbin policy type: allow/deny
         ur.role_name AS subject,                                -- Role as the subject
-        res.scope || ':' || COALESCE(res.app_id::text, '') || ':' || res.resource_name AS object,
+        res.scope || '/' || COALESCE(res.app_id::text, '') || '/' || res.resource_name AS object,
         perm.action AS action,                                  -- Action
         COALESCE(rp.effect, 'allow') AS effect                  -- Allow/Deny
     FROM user_roles ur
@@ -26,7 +26,7 @@ user_permissions AS (
     SELECT
         'p' AS ptype,                                           -- Casbin policy type: allow/deny
         u.id::text AS subject,                                      -- User as Casbin subject
-        res.scope || ':' || COALESCE(res.app_id::text, '') || ':' || res.resource_name AS object,
+        res.scope || '/' || COALESCE(res.app_id::text, '') || '/' || res.resource_name AS object,
         perm.action AS action,                                  -- Action
         COALESCE(up.effect, 'allow') AS effect                  -- Allow/Deny
     FROM iam_user_policies up

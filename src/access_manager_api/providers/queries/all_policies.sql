@@ -2,8 +2,8 @@ WITH role_permissions AS (
     -- Role-based policies
     SELECT DISTINCT
         'p' AS ptype,                                           -- Role-permission policy
-        r.scope || ':' || COALESCE(r.app_id::text, '') || ':' || r.role_name AS subject,
-        res.scope || ':' || COALESCE(res.app_id::text, '') || ':' || res.resource_name AS object,
+        r.scope || '/' || COALESCE(r.app_id::text, '') || '/' || r.role_name AS subject,
+        res.scope || '/' || COALESCE(res.app_id::text, '') || '/' || res.resource_name AS object,
         perm.action AS action,                                  -- Action (read, write, etc.)
         COALESCE(rp.effect, 'allow') AS effect                  -- Allow/Deny
     FROM iam_role_policies rp
@@ -16,7 +16,7 @@ user_permissions AS (
     SELECT DISTINCT
         'p' AS ptype,                                           -- User-permission policy
         u.id::text AS subject,                                      -- User directly as subject
-        res.scope || ':' || COALESCE(res.app_id::text, '') || ':' || res.resource_name AS object,
+        res.scope || '/' || COALESCE(res.app_id::text, '') || '/' || res.resource_name AS object,
         perm.action AS action,                                  -- Action (read, write, etc.)
         COALESCE(up.effect, 'allow') AS effect                  -- Allow/Deny
     FROM iam_user_policies up
@@ -29,7 +29,7 @@ user_roles AS (
     SELECT DISTINCT
         'g' AS ptype,                                           -- User-role mapping
         u.id::text AS subject,                                      -- User as subject
-        r.scope || ':' || COALESCE(r.app_id::text, '') || ':' || r.role_name AS object,
+        r.scope || '/' || COALESCE(r.app_id::text, '') || '/' || r.role_name AS object,
         NULL AS action,                                         -- No action for "g" rules
         NULL AS effect                                          -- No effect for "g" rules
     FROM user_roles ur

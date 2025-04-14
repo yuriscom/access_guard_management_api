@@ -53,7 +53,7 @@ async def get_policies(
 
     # Construct the resource string
     resource_path = dependencies.build_resource_path("SMC", app_id)
-    resource = f"{resource_path}:policies"
+    resource = f"{resource_path}/policies"
 
     # Enforce access
     try:

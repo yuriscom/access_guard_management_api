@@ -13,7 +13,7 @@ def build_resource_path(scope: str, app_id: Optional[int]) -> str:
         build_resource_path("SMC", None) -> "SMC"
         build_resource_path("APP", 1) -> "APP:1"
     """
-    return f"{scope}:" if app_id is None else f"{scope}:{app_id}"
+    return f"{scope}/" if app_id is None else f"{scope}/{app_id}"
 
 
 def get_user(

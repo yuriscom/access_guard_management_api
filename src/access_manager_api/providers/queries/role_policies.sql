@@ -3,7 +3,7 @@ WITH role_permissions AS (
     SELECT
         'p' as ptype,                                           -- Casbin policy type: allow or deny
         r.role_name AS subject,                                 -- Role as Casbin subject
-        CONCAT(res.scope, ':', res.resource_name) AS object,    -- Scoped resource
+        CONCAT(res.scope, '/', res.resource_name) AS object,    -- Scoped resource
         perm.action AS action,                                   -- Action
         CASE
             WHEN rp.effect = 'deny' THEN 'deny'

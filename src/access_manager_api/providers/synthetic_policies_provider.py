@@ -18,6 +18,6 @@ def load_smc_superadmin_policies(session: Session) -> List[Tuple[str, ...]]:
 
     # Create policies for each superadmin user
     return [
-        ("p", str(user.id), "SMC::*", "*", "allow")
+        ("p", str(user.id), "SMC/*", "*", "allow")
         for user in users
     ]
