@@ -1,13 +1,14 @@
-from typing import List, Dict, Optional
+from typing import List, Optional, Set
 
+from access_guard.authz import get_permissions_enforcer
 from sqlalchemy.orm import Session
 
-from ..models import IAMResource, IAMRole, IAMPermission, IAMRolePolicy, UserRole, User, IAMUserPolicy
+from ..mappers.model_mappers import mapUserToAccessGuardUser
+from ..models import IAMResource, IAMRole, IAMPermission, IAMRolePolicy, UserRole, IAMUserPolicy, Scope
 from ..schemas import (
     IAMResourceCreate, IAMRoleCreate, IAMPermissionCreate, IAMUserPolicyCreate,
-    IAMRolePolicyCreate, UserRoleCreate, UserAccess, Permission
+    IAMRolePolicyCreate, UserRoleCreate
 )
-
 
 def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource:
     db_resource = IAMResource(**resource.model_dump())
@@ -18,7 +19,6 @@ def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource
 
 def get_iam_resource_by_id(db: Session, resource_id: int) -> IAMResource:
     return db.query(IAMResource).filter(IAMResource.id == resource_id).first()
-
 
 def get_iam_resources_by_scope_app(db: Session, scope: str, app_id: Optional[int]) -> List[IAMResource]:
     query = db.query(IAMResource).filter(IAMResource.scope == scope)
@@ -42,7 +42,6 @@ def update_iam_resource(
     db.commit()
     db.refresh(existing)
     return existing
-
 
 def delete_iam_resource(
         db: Session,
@@ -110,69 +109,95 @@ def delete_user_role(db: Session, user_role_id: int) -> bool:
         return True
     return False
 
+from typing import Optional, List, Dict
+from sqlalchemy.orm import Session
+
+from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
+from access_guard.authz.models.enums import PolicyLoaderType
+from access_guard.authz.models.load_policy_result import LoadPolicyResult
+from access_manager_api.schemas import UserAccess, Permission
+from access_manager_api.models import User
+from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
+
 def get_user_access(
-    db: Session,
-    user_id: int,
-    scope: str,
-    app_id: Optional[int] = None
+        db: Session,
+        user_id: int,
+        scope: str,
+        app_id: Optional[int] = None
 ) -> Optional[UserAccess]:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return None
 
-    # Get user's roles
-    roles_query = db.query(IAMRole.role_name).join(UserRole).filter(
-        UserRole.user_id == user.id,
-        IAMRole.scope == scope
+    # Step 1: Build params for Access Guard
+    enforcer_params = PermissionsEnforcerParams(
+        policy_loader_type=PolicyLoaderType.DB,
+        filter={
+            "policy_api_scope": Scope(scope.lower()).name,
+            "policy_api_appid": str(app_id) if app_id is not None else None,
+            "policy_api_userid": str(user_id)
+        }
     )
-    if app_id:
-        roles_query = roles_query.filter(IAMRole.app_id == app_id)
-    roles = roles_query.all()
-    role_names = [role[0] for role in roles]
 
-    # Get permissions for each role
+    # Step 2: Create enforcer instance with filter
+    enforcer = get_permissions_enforcer(
+        settings=enforcer_params,
+        engine=db.bind,
+        query_provider=AccessManagementQueryProvider(),
+        new_instance=True
+    )
+
+    # Step 3: Access policies (from filtered loader)
+    entity = mapUserToAccessGuardUser(user)
+    policies_result: LoadPolicyResult = enforcer._enforcer.adapter.load_policy(enforcer._model, entity=entity,
+                                                                               filter=enforcer._params.filter)
+
+    roles: List[str] = []
+    user_roles: Set[str] = set()
     permissions: Dict[str, List[Permission]] = {}
-    for role_name in role_names:
-        role = db.query(IAMRole).filter(IAMRole.role_name == role_name).first()
-        if role:
-            role_permissions = (
-                db.query(IAMPermission.action, IAMResource.resource_name, IAMRolePolicy.effect)
-                .join(IAMRolePolicy, IAMRolePolicy.permission_id == IAMPermission.id)
-                .join(IAMResource, IAMPermission.resource_id == IAMResource.id)
-                .filter(IAMRolePolicy.role_id == role.id)
-                .filter(IAMResource.scope == scope)
-                .all()
-            )
-            
-            for action, resource, effect in role_permissions:
+
+    # Pass 1: Process g policies → collect roles
+    for policy in policies_result.policies:
+        ptype = policy[0]
+
+        if ptype == "g":
+            _, sub, role_path = policy
+            if sub == str(user_id):
+                role_name = extract_role_name(role_path)
+                roles.append(role_name)
+                user_roles.add(role_path)
+
+    # Pass 2: Process p policies → handle direct + role-based permissions
+    for policy in policies_result.policies:
+        ptype = policy[0]
+
+        if ptype == "p":
+            _, sub, obj, act, *rest = policy
+            if sub == str(user_id) or sub in user_roles:
+                resource = extract_resource_name(obj)
+                effect = rest[0] if rest else "allow"
+
                 if resource not in permissions:
                     permissions[resource] = []
-                # Check if this action already exists for this resource
-                if not any(perm.action == action for perm in permissions[resource]):
-                    permissions[resource].append(Permission(action=action, effect=effect))
 
-    # Get direct user permissions
-    user_permissions = (
-        db.query(IAMPermission.action, IAMResource.resource_name, IAMUserPolicy.effect)
-        .join(IAMUserPolicy, IAMUserPolicy.permission_id == IAMPermission.id)
-        .join(IAMResource, IAMPermission.resource_id == IAMResource.id)
-        .filter(IAMUserPolicy.user_id == user.id)
-        .filter(IAMResource.scope == scope)
-        .all()
-    )
-
-    # Merge user-specific permissions with role-based permissions
-    for action, resource, effect in user_permissions:
-        if resource not in permissions:
-            permissions[resource] = []
-        # Remove any existing permission for this action (from roles) and add the user-specific one
-        permissions[resource] = [p for p in permissions[resource] if p.action != action]
-        permissions[resource].append(Permission(action=action, effect=effect))
+                if not any(p.action == act for p in permissions[resource]):
+                    permissions[resource].append(Permission(action=act, effect=effect))
 
     return UserAccess(
         user_id=user.id,
         user_name=user.name,
         scope=scope,
-        roles=role_names,
+        roles=roles,
         permissions=permissions
-    ) 
+    )
+
+def extract_resource_name(resource_path: str) -> str:
+    """Returns the last part of a resource path (e.g., SMC/1/policies → policies)."""
+    return resource_path.strip("/").split("/")[-1]
+
+def extract_role_name(role_path: str) -> str:
+    """
+    Extracts role name from full role path.
+    Example: APP/1/Viewer → Viewer
+    """
+    return role_path.strip("/").split("/")[-1]
