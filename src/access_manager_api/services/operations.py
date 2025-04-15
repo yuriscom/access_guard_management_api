@@ -1,14 +1,22 @@
-from typing import List, Optional, Set
+from typing import Optional, List, Dict
+from typing import Set
 
 from access_guard.authz import get_permissions_enforcer
+from access_guard.authz.models.enums import PolicyLoaderType
+from access_guard.authz.models.load_policy_result import LoadPolicyResult
+from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 from sqlalchemy.orm import Session
 
+from access_manager_api.models import User
+from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
+from access_manager_api.schemas import UserAccess, Permission
 from ..mappers.model_mappers import mapUserToAccessGuardUser
 from ..models import IAMResource, IAMRole, IAMPermission, IAMRolePolicy, UserRole, IAMUserPolicy, Scope
 from ..schemas import (
     IAMResourceCreate, IAMRoleCreate, IAMPermissionCreate, IAMUserPolicyCreate,
     IAMRolePolicyCreate, UserRoleCreate
 )
+
 
 def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource:
     db_resource = IAMResource(**resource.model_dump())
@@ -108,16 +116,6 @@ def delete_user_role(db: Session, user_role_id: int) -> bool:
         db.commit()
         return True
     return False
-
-from typing import Optional, List, Dict
-from sqlalchemy.orm import Session
-
-from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
-from access_guard.authz.models.enums import PolicyLoaderType
-from access_guard.authz.models.load_policy_result import LoadPolicyResult
-from access_manager_api.schemas import UserAccess, Permission
-from access_manager_api.models import User
-from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
 
 def get_user_access(
         db: Session,
