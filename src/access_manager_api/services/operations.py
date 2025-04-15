@@ -144,7 +144,8 @@ def get_user_access(
         settings=enforcer_params,
         engine=db.bind,
         query_provider=AccessManagementQueryProvider(),
-        new_instance=True
+        new_instance=True,
+        skip_initial_policy_load=True
     )
 
     # Step 3: Access policies (from filtered loader)
