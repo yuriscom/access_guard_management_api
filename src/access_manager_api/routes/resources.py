@@ -61,7 +61,7 @@ def read_resources_by_scope_app(
     user_id, app_id, scope = headers
     try:
         resource_path = build_resource_path(scope, app_id)
-        access_guard_service.require_permission(user, f"SMC:{resource_path}:iam", "read")
+        access_guard_service.require_permission(user, f"SMC/{resource_path}/iam", "read")
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
 

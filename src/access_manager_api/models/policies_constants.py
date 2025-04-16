@@ -1,0 +1,2 @@
+class PoliciesConstants:
+    superadmin = "Superadmin";
