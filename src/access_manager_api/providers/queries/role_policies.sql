@@ -14,5 +14,6 @@ WITH role_permissions AS (
     JOIN iam_permissions perm ON rp.permission_id = perm.id
     JOIN iam_resources res ON perm.resource_id = res.id
     WHERE r.id = :role_id
+    AND NOT r.synthetic
 )
 SELECT * FROM role_permissions;

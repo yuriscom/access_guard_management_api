@@ -11,6 +11,7 @@ WITH role_permissions AS (
     JOIN iam_resources res ON perm.resource_id = res.id
     WHERE r.scope = :policy_api_scope AND (:policy_api_appid IS NULL OR r.app_id = :policy_api_appid)
     AND res.scope = :policy_api_scope AND (:policy_api_appid IS NULL OR res.app_id = :policy_api_appid)
+    AND NOT r.synthetic AND NOT res.synthetic
 ),
 user_permissions AS (
     SELECT DISTINCT
@@ -24,6 +25,7 @@ user_permissions AS (
     JOIN iam_permissions perm ON up.permission_id = perm.id
     JOIN iam_resources res ON perm.resource_id = res.id
     WHERE res.scope = :policy_api_scope AND (:policy_api_appid IS NULL OR res.app_id = :policy_api_appid)
+    AND NOT res.synthetic
 ),
 user_roles AS (
     SELECT DISTINCT
@@ -36,6 +38,7 @@ user_roles AS (
     JOIN users u ON ur.user_id = u.id
     JOIN iam_roles r ON ur.role_id = r.id
     WHERE r.scope = :policy_api_scope AND (:policy_api_appid IS NULL OR r.app_id = :policy_api_appid)
+    AND NOT r.synthetic
 )
 SELECT ptype, subject, object, action, effect FROM role_permissions
 UNION ALL
