@@ -1,7 +1,10 @@
-from sqlalchemy.orm import Session
 from typing import List, Optional
-from ..models import IAMRolePolicy
-from ..schemas import IAMRolePolicyCreate
+
+from sqlalchemy.orm import Session
+
+from access_manager_api.models import IAMRolePolicy
+from access_manager_api.schemas import IAMRolePolicyCreate
+
 
 class IAMRolePolicyService:
     def __init__(self, db: Session):
@@ -38,4 +41,4 @@ class IAMRolePolicyService:
             self.db.delete(db_policy)
             self.db.commit()
             return True
-        return False 
+        return False

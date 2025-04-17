@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Enum, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from .base import Base
 from .enums import Scope
@@ -11,6 +11,8 @@ class IAMRole(Base):
     app_id = Column(Integer, ForeignKey('apps.id', ondelete='CASCADE'), nullable=True)
     role_name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
+    synthetic = Column(Boolean, nullable=True)
+    synthetic_pattern = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationships

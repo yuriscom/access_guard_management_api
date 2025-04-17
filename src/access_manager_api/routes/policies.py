@@ -3,18 +3,17 @@ from typing import Tuple
 import jwt
 from access_guard.authz.exceptions import PermissionDeniedError
 from fastapi import APIRouter, Depends, HTTPException, Header
-from sqlalchemy.orm import Session
 
-from . import dependencies
-from .dependencies import get_request_headers, get_user
-from ..config import settings
-from ..schemas.policies import PoliciesParams
-from ..services.access_guard import get_access_guard_enforcer
-from ..services.policies import get_policies_service
-from ..services.db import get_db
-from ..models import User as UserModel, IAMResource as IAMResourceModel
+from access_manager_api.config import settings
+from access_manager_api.models import User as UserModel
+from access_manager_api.routes import dependencies
+from access_manager_api.routes.dependencies import get_request_headers, get_user
+from access_manager_api.schemas.policies import PoliciesParams
+from access_manager_api.services.access_guard import get_access_guard_enforcer
+from access_manager_api.services.policies import get_policies_service
 
 router = APIRouter(prefix="/iam")
+
 
 async def validate_jwt(authorization: str = Header(...)) -> dict:
     try:
@@ -37,13 +36,14 @@ async def validate_jwt(authorization: str = Header(...)) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+
 @router.get("/policies")
 async def get_policies(
-    # jwt_claims: dict = Depends(validate_jwt),
-    headers: Tuple[str, int, str] = Depends(get_request_headers),
-    access_guard_service = Depends(get_access_guard_enforcer),
-    policies_service = Depends(get_policies_service),
-    user: UserModel = Depends(get_user)
+        # jwt_claims: dict = Depends(validate_jwt),
+        headers: Tuple[str, int, str] = Depends(get_request_headers),
+        access_guard_service=Depends(get_access_guard_enforcer),
+        policies_service=Depends(get_policies_service),
+        user: UserModel = Depends(get_user)
 ):
     # Extract claims
     # user_id = jwt_claims["sub"]
@@ -52,12 +52,11 @@ async def get_policies(
     user_id, app_id, scope = headers
 
     # Construct the resource string
-    resource_path = dependencies.build_resource_path("SMC", app_id)
-    resource = f"{resource_path}/policies"
+    resource_path = dependencies.build_resource_path("policies", app_id)
 
     # Enforce access
     try:
-        access_guard_service.require_permission(user, resource, "read")
+        access_guard_service.require_permission(user, resource_path, "read")
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
 
@@ -70,4 +69,4 @@ async def get_policies(
 
     # If access granted, fetch policies
     policies = policies_service.get_policies(params)
-    return policies 
+    return policies

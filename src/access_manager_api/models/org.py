@@ -9,4 +9,5 @@ class Org(Base):
     name = Column(String(255), nullable=False, unique=True)
     
     # Relationships
-    users = relationship("User", back_populates="org") 
+    users = relationship("User", back_populates="org")
+    org_apps = relationship("OrgApps", back_populates="org")

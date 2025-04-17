@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..schemas import IAMUserPolicy, IAMUserPolicyCreate
-from ..services import create_iam_user_policy, delete_iam_user_policy
-from ..services.db import get_db
+
+from access_manager_api.schemas import IAMUserPolicy, IAMUserPolicyCreate
+from access_manager_api.services import create_iam_user_policy, delete_iam_user_policy
+from access_manager_api.services.db import get_db
 
 router = APIRouter(prefix="/iam/user/policies", tags=["iam-policies"])
 

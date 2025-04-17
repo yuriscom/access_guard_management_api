@@ -1,7 +1,10 @@
-from sqlalchemy.orm import Session
 from typing import List, Optional
-from ..models import UserRole
-from ..schemas import UserRoleCreate
+
+from sqlalchemy.orm import Session
+
+from access_manager_api.models import UserRole
+from access_manager_api.schemas import UserRoleCreate
+
 
 class UserRoleService:
     def __init__(self, db: Session):
@@ -41,4 +44,4 @@ class UserRoleService:
             self.db.delete(db_user_role)
             self.db.commit()
             return True
-        return False 
+        return False

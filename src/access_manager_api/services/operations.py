@@ -7,15 +7,13 @@ from access_guard.authz.models.load_policy_result import LoadPolicyResult
 from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 from sqlalchemy.orm import Session
 
+from access_manager_api.mappers.model_mappers import mapUserToAccessGuardUser
+from access_manager_api.models import IAMResource, IAMRole, IAMPermission, IAMRolePolicy, UserRole, IAMUserPolicy, Scope
 from access_manager_api.models import User
 from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
-from access_manager_api.schemas import UserAccess, Permission
-from ..mappers.model_mappers import mapUserToAccessGuardUser
-from ..models import IAMResource, IAMRole, IAMPermission, IAMRolePolicy, UserRole, IAMUserPolicy, Scope
-from ..schemas import (
-    IAMResourceCreate, IAMRoleCreate, IAMPermissionCreate, IAMUserPolicyCreate,
+from access_manager_api.schemas import IAMResourceCreate, IAMRoleCreate, IAMPermissionCreate, IAMUserPolicyCreate, \
     IAMRolePolicyCreate, UserRoleCreate
-)
+from access_manager_api.schemas import UserAccess, Permission
 
 
 def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource:
@@ -25,8 +23,10 @@ def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource
     db.refresh(db_resource)
     return db_resource
 
+
 def get_iam_resource_by_id(db: Session, resource_id: int) -> IAMResource:
     return db.query(IAMResource).filter(IAMResource.id == resource_id).first()
+
 
 def get_iam_resources_by_scope_app(db: Session, scope: str, app_id: Optional[int]) -> List[IAMResource]:
     query = db.query(IAMResource).filter(IAMResource.scope == scope)
@@ -37,6 +37,7 @@ def get_iam_resources_by_scope_app(db: Session, scope: str, app_id: Optional[int
         query = query.filter(IAMResource.app_id == app_id)
 
     return query.all()
+
 
 def update_iam_resource(
         db: Session,
@@ -51,12 +52,14 @@ def update_iam_resource(
     db.refresh(existing)
     return existing
 
+
 def delete_iam_resource(
         db: Session,
         resource: IAMResource
 ) -> None:
     db.delete(resource)
     db.commit()
+
 
 def create_iam_role(db: Session, role: IAMRoleCreate) -> IAMRole:
     db_role = IAMRole(**role.model_dump())
@@ -65,12 +68,14 @@ def create_iam_role(db: Session, role: IAMRoleCreate) -> IAMRole:
     db.refresh(db_role)
     return db_role
 
+
 def create_iam_permission(db: Session, permission: IAMPermissionCreate) -> IAMPermission:
     db_permission = IAMPermission(**permission.model_dump())
     db.add(db_permission)
     db.commit()
     db.refresh(db_permission)
     return db_permission
+
 
 def create_iam_role_policy(db: Session, policy: IAMRolePolicyCreate) -> IAMRolePolicy:
     db_policy = IAMRolePolicy(**policy.model_dump())
@@ -79,6 +84,7 @@ def create_iam_role_policy(db: Session, policy: IAMRolePolicyCreate) -> IAMRoleP
     db.refresh(db_policy)
     return db_policy
 
+
 def create_iam_user_policy(db: Session, policy: IAMUserPolicyCreate) -> IAMUserPolicy:
     db_policy = IAMUserPolicy(**policy.model_dump())
     db.add(db_policy)
@@ -86,12 +92,14 @@ def create_iam_user_policy(db: Session, policy: IAMUserPolicyCreate) -> IAMUserP
     db.refresh(db_policy)
     return db_policy
 
+
 def create_user_role(db: Session, user_role: UserRoleCreate) -> UserRole:
     db_user_role = UserRole(**user_role.model_dump())
     db.add(db_user_role)
     db.commit()
     db.refresh(db_user_role)
     return db_user_role
+
 
 def delete_iam_role_policy(db: Session, policy_id: int) -> bool:
     db_policy = db.query(IAMRolePolicy).filter(IAMRolePolicy.id == policy_id).first()
@@ -101,6 +109,7 @@ def delete_iam_role_policy(db: Session, policy_id: int) -> bool:
         return True
     return False
 
+
 def delete_iam_user_policy(db: Session, policy_id: int) -> bool:
     db_policy = db.query(IAMUserPolicy).filter(IAMUserPolicy.id == policy_id).first()
     if db_policy:
@@ -109,6 +118,7 @@ def delete_iam_user_policy(db: Session, policy_id: int) -> bool:
         return True
     return False
 
+
 def delete_user_role(db: Session, user_role_id: int) -> bool:
     db_user_role = db.query(UserRole).filter(UserRole.id == user_role_id).first()
     if db_user_role:
@@ -116,6 +126,7 @@ def delete_user_role(db: Session, user_role_id: int) -> bool:
         db.commit()
         return True
     return False
+
 
 def get_user_access(
         db: Session,
@@ -190,9 +201,11 @@ def get_user_access(
         permissions=permissions
     )
 
+
 def extract_resource_name(resource_path: str) -> str:
     """Returns the last part of a resource path (e.g., SMC/1/policies → policies)."""
     return resource_path.strip("/").split("/")[-1]
+
 
 def extract_role_name(role_path: str) -> str:
     """

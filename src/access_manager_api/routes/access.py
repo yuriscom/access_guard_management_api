@@ -3,11 +3,11 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from ..models import User as UserModel, IAMResource as IAMResourceModel
-from ..schemas import UserAccess
-from ..services import get_user_access
-from ..services.db import get_db
-from ..services.access_guard import get_access_guard_enforcer
+from access_manager_api.models import User as UserModel, IAMResource as IAMResourceModel
+from access_manager_api.schemas import UserAccess
+from access_manager_api.services import get_user_access
+from access_manager_api.services.access_guard import get_access_guard_enforcer
+from access_manager_api.services.db import get_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/iam/access", tags=["iam-access"])

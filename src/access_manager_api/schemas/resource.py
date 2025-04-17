@@ -1,7 +1,10 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
-from ..models.enums import Scope
+from typing import Optional
+
+from pydantic import BaseModel
+
+from access_manager_api.models.enums import Scope
+
 
 class IAMResourceBase(BaseModel):
     scope: Scope
@@ -9,12 +12,14 @@ class IAMResourceBase(BaseModel):
     resource_name: str
     description: Optional[str] = None
 
+
 class IAMResourceCreate(IAMResourceBase):
     pass
+
 
 class IAMResource(IAMResourceBase):
     id: int
     created_at: datetime
 
     class Config:
-        from_attributes = True 
+        from_attributes = True

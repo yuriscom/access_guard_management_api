@@ -1,7 +1,10 @@
-from sqlalchemy.orm import Session
 from typing import List, Optional
-from ..models import IAMPermission
-from ..schemas import IAMPermissionCreate
+
+from sqlalchemy.orm import Session
+
+from access_manager_api.models import IAMPermission
+from access_manager_api.schemas import IAMPermissionCreate
+
 
 class IAMPermissionService:
     def __init__(self, db: Session):
@@ -38,4 +41,4 @@ class IAMPermissionService:
             self.db.delete(db_permission)
             self.db.commit()
             return True
-        return False 
+        return False

@@ -1,7 +1,10 @@
-from sqlalchemy.orm import Session
 from typing import List, Optional
-from ..models import IAMUserPolicy
-from ..schemas import IAMUserPolicyCreate
+
+from sqlalchemy.orm import Session
+
+from access_manager_api.models import IAMUserPolicy
+from access_manager_api.schemas import IAMUserPolicyCreate
+
 
 class IAMUserPolicyService:
     def __init__(self, db: Session):

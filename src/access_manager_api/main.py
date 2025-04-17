@@ -2,10 +2,11 @@ import logging
 
 from fastapi import FastAPI
 
-from .routes import router
-from .services.access_guard import get_access_guard_enforcer
-from .config import settings
-from .services.db import init_db
+from access_manager_api.app_context import init_access_manager_id
+from access_manager_api.config import settings
+from access_manager_api.routes import router
+from access_manager_api.services.access_guard import get_access_guard_enforcer
+from access_manager_api.services.db import init_db, get_db
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +24,11 @@ app.include_router(router)
 @app.on_event("startup")
 async def startup_event():
     # Initialize database
-    engine = init_db(settings.database_url)
+    init_db(settings.database_url)
     logger.info("Database initialized")
-    
+
+    init_access_manager_id(next(get_db()))
+
     # Initialize access guard service
     get_access_guard_enforcer()
     logger.info("Permissions service initialized")

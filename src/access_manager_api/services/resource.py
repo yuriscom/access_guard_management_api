@@ -1,7 +1,10 @@
-from sqlalchemy.orm import Session
 from typing import List, Optional
-from ..models import IAMResource
-from ..schemas import IAMResourceCreate
+
+from sqlalchemy.orm import Session
+
+from access_manager_api.models import IAMResource
+from access_manager_api.schemas import IAMResourceCreate
+
 
 class IAMResourceService:
     def __init__(self, db: Session):
@@ -38,4 +41,4 @@ class IAMResourceService:
             self.db.delete(db_resource)
             self.db.commit()
             return True
-        return False 
+        return False

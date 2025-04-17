@@ -1,12 +1,11 @@
-import os
 from pathlib import Path
 
-# Get the project root directory
 ROOT_DIR = Path(__file__).parent.parent.parent
 
-# Configuration paths
-CONFIG_DIR = ROOT_DIR / "config"
-MODEL_PATH = CONFIG_DIR / "rbac_model.conf"
+ACCESS_MANAGER_APP_NAME = "access_manager"
 
-# Ensure the config directory exists
-CONFIG_DIR.mkdir(exist_ok=True) 
+ROLE_SUPERADMIN = "Superadmin"
+ROLE_AM_ADMIN = "AMAdmin"
+ROLE_POLICY_READER = "PolicyReader"
+ROLE_IAM_MANAGER = "IAMManager"
+

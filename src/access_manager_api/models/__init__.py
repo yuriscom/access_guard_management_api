@@ -1,14 +1,15 @@
 from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+from access_manager_api.models.app import App
+from access_manager_api.models.enums import Scope
+from access_manager_api.models.org import Org
+from access_manager_api.models.org_apps import OrgApps
+from access_manager_api.models.permission import IAMPermission
+from access_manager_api.models.resource import IAMResource
+from access_manager_api.models.role import IAMRole
+from access_manager_api.models.role_policy import IAMRolePolicy
+from access_manager_api.models.user import User
+from access_manager_api.models.user_policy import IAMUserPolicy
+from access_manager_api.models.user_role import UserRole
 
-from .resource import IAMResource
-from .role import IAMRole
-from .permission import IAMPermission
-from .role_policy import IAMRolePolicy
-from .user_policy import IAMUserPolicy
-from .user_role import UserRole
-from .enums import Scope
-from .user import User
-from .app import App
-from .org import Org
+Base = declarative_base()

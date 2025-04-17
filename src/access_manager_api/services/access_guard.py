@@ -1,13 +1,14 @@
 import logging
+
 from access_guard.authz import get_permissions_enforcer
 from access_guard.authz.models.enums import PolicyLoaderType
 from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 
-from .db import get_engine, get_db
-from ..config import settings
-from ..models import Scope
-from ..providers.policy_query_provider import AccessManagementQueryProvider
-from ..providers.synthetic_policies_provider import load_smc_superadmin_policies
+from access_manager_api.config import settings
+from access_manager_api.models import Scope
+from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
+from access_manager_api.providers.synthetic_policies_provider import load_synthetic_policies
+from access_manager_api.services.db import get_engine, get_db
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def get_access_guard_enforcer():
         "policy_loader_type": PolicyLoaderType.DB,
         "filter": {
             "policy_api_scope": Scope.SMC.name,
-            "policy_api_appid": None
+            "policy_api_appid": 42
         }
     }
 
@@ -36,10 +37,9 @@ def get_access_guard_enforcer():
     def synthetic_policy_provider():
         db_session = next(get_db())
         try:
-            return load_smc_superadmin_policies(db_session)
+            return load_synthetic_policies(db_session)
         finally:
             db_session.close()
-
 
     return get_permissions_enforcer(params, get_engine(), query_provider=AccessManagementQueryProvider()
                                     , synthetic_policy_provider=synthetic_policy_provider)

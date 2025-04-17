@@ -1,13 +1,13 @@
+from access_guard.authz.factory import get_permissions_enforcer
 from access_guard.authz.models.enums import PolicyLoaderType
 from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
-from sqlalchemy.orm import Session
 from fastapi import Depends
-from access_guard.authz.factory import get_permissions_enforcer
+from sqlalchemy.orm import Session
 
-from ..providers.policy_query_provider import AccessManagementQueryProvider
-from ..services.db import get_db
-from ..schemas.policies import PoliciesParams
-from ..config import settings
+from access_manager_api.config import settings
+from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
+from access_manager_api.schemas.policies import PoliciesParams
+from access_manager_api.services.db import get_db
 
 
 class PoliciesService:

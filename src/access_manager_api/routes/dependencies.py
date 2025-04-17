@@ -1,24 +1,23 @@
 from typing import Optional, Tuple
+
 from fastapi import Header, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from ..services.db import get_db
-from ..models import User as UserModel
+from access_manager_api.app_context import get_access_manager_app_id
+from access_manager_api.models import User as UserModel, Scope
+from access_manager_api.services.db import get_db
 
 
-def build_resource_path(scope: str, app_id: Optional[int]) -> str:
+def build_resource_path(resource_name: str, app_id: Optional[int]) -> str:
     """
-    Builds resource path string from scope and app_id.
-    Example:
-        build_resource_path("SMC", None) -> "SMC"
-        build_resource_path("APP", 1) -> "APP:1"
+    Builds resource path string from resource name and app_id.
     """
-    return f"{scope}/" if app_id is None else f"{scope}/{app_id}"
+    return f"{Scope.SMC.name}/{get_access_manager_app_id()}/{resource_name}/APP/{app_id}"
 
 
 def get_user(
-    user_id: str = Header(..., alias="user_id"),
-    db: Session = Depends(get_db)
+        user_id: str = Header(..., alias="user_id"),
+        db: Session = Depends(get_db)
 ) -> UserModel:
     """
     Dependency to load user from user_id header.
@@ -30,9 +29,9 @@ def get_user(
 
 
 def get_request_headers(
-    user_id: Optional[str] = Header(None, alias="user_id"),
-    app_id: Optional[int] = Header(None, alias="app_id"),
-    scope: Optional[str] = Header(None, alias="scope")
+        user_id: Optional[str] = Header(None, alias="user_id"),
+        app_id: Optional[int] = Header(None, alias="app_id"),
+        scope: Optional[str] = Header(None, alias="scope")
 ) -> Tuple[Optional[str], Optional[int], Optional[str]]:
     """
     Extract common request headers for IAM operations.

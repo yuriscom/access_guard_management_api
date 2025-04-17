@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..services.db import get_db
-from ..schemas import IAMRolePolicy, IAMRolePolicyCreate
-from ..services import create_iam_role_policy, delete_iam_role_policy
+
+from access_manager_api.schemas import IAMRolePolicy, IAMRolePolicyCreate
+from access_manager_api.services import create_iam_role_policy, delete_iam_role_policy
+from access_manager_api.services.db import get_db
 
 router = APIRouter(prefix="/iam/role/policies", tags=["iam-policies"])
 
