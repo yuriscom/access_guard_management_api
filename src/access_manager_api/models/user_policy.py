@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from .base import Base
+from access_manager_api.models.base import Base
 
 class IAMUserPolicy(Base):
     __tablename__ = 'iam_user_policies'

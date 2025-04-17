@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from access_manager_api.models.base import Base
 
 
 class App(Base):

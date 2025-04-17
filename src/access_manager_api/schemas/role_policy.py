@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from .common import PolicyEffect
+from access_manager_api.schemas.common import PolicyEffect
 
 
 class IAMRolePolicyBase(BaseModel):

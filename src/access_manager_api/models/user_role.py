@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
-from .base import Base
+from access_manager_api.models.base import Base
 
 class UserRole(Base):
     __tablename__ = 'user_roles'

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from . import (
+from access_manager_api.routes import (
     user_policies,
     role_policies,
     user_roles,

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Enum, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
-from .base import Base
-from .enums import Scope
+from access_manager_api.models.base import Base
+from access_manager_api.models.enums import Scope
 
 class IAMRole(Base):
     __tablename__ = 'iam_roles'

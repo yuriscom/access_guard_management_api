@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from .base import Base
+from access_manager_api.models.base import Base
 
 class Org(Base):
     __tablename__ = 'orgs'

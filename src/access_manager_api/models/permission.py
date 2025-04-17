@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, UniqueConstraint
 from sqlalchemy.orm import relationship
-from .base import Base
+from access_manager_api.models.base import Base
 
 class IAMPermission(Base):
     __tablename__ = 'iam_permissions'
