@@ -9,3 +9,6 @@ ROLE_AM_ADMIN = "AMAdmin"
 ROLE_POLICY_READER = "PolicyReader"
 ROLE_IAM_MANAGER = "IAMManager"
 
+## Models
+APP_MODE_PUBLIC = "public"
+APP_USER_MANAGEMENT_TYPE_FULLY = "fully"
