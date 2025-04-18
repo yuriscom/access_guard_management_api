@@ -7,7 +7,7 @@ WITH user_roles AS (
     JOIN iam_roles r ON ur.role_id = r.id
     JOIN users u ON ur.user_id = u.id
     WHERE u.id = :user_id
-    AND NOT r.synthetic
+    AND NOT coalesce(r.synthetic, false)
 ),
 role_permissions AS (
     -- Get all role-based permissions for the user
@@ -21,7 +21,7 @@ role_permissions AS (
     JOIN iam_role_policies rp ON ur.role_id = rp.role_id
     JOIN iam_permissions perm ON rp.permission_id = perm.id
     JOIN iam_resources res ON perm.resource_id = res.id
-    WHERE NOT res.synthetic
+    AND NOT coalesce(res.synthetic, false)
 ),
 user_permissions AS (
     -- Get direct user-specific permissions
@@ -36,7 +36,7 @@ user_permissions AS (
     JOIN iam_permissions perm ON up.permission_id = perm.id
     JOIN iam_resources res ON perm.resource_id = res.id
     WHERE u.id = :user_id
-    AND NOT res.synthetic
+    AND NOT coalesce(res.synthetic, false)
 ),
 user_roles_mappings AS (
     -- Map user to roles for Casbin "g" rules
