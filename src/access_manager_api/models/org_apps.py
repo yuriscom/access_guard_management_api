@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, Boolean
 from sqlalchemy import DateTime, ForeignKey, Uuid
 from sqlalchemy.orm import relationship, mapped_column
 
@@ -14,6 +14,7 @@ class OrgApps(Base):
     id = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     org_id = Column(Integer, ForeignKey('orgs.id', ondelete='CASCADE'), nullable=False)
     app_id = Column(Integer, ForeignKey('apps.id', ondelete='CASCADE'), nullable=False)
+    is_owner = mapped_column(Boolean, nullable=False, default=False)
     started_at = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     # Relationships
