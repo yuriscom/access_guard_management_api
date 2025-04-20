@@ -1,8 +1,8 @@
-"""create SMC Access Manager built-in roles
+"""add synthetic pattern to specific roles
 
-Revision ID: 0002_built_in_roles
-Revises: 0001_init_iam_tables
-Create Date: 2025-04-19 11:37:12.407205
+Revision ID: 0004_synthetic_roles_pattern
+Revises: 0003_role_org_admin
+Create Date: 2025-04-20 17:34:21.626102
 
 """
 from datetime import datetime
@@ -13,17 +13,14 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0002_built_in_roles'
-down_revision: Union[str, None] = '0001_init_iam_tables'
+revision: str = '0004_synthetic_roles_pattern'
+down_revision: Union[str, None] = '0003_role_org_admin'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-
 roles = [
-    ("IAMManager", "Manage IAM resources for a specific product"),
-    ("PolicyReader", "Read-only access to policies for system clients"),
-    ("AMAdmin", "Full access to all Access Manager operations"),
-    ("Superadmin", "Full access to all SMC operations across applications")
+    ("BillingViewer", "Access to view bills in SMC", "billing"),
+    ("ReportingUser", "Access to user permissions for SMC reports", "reporting")
 ]
 
 def upgrade() -> None:
@@ -36,22 +33,33 @@ def upgrade() -> None:
     access_manager_id = str(row[0])
     now = datetime.utcnow()
 
-    for role_name, description in roles:
+    for role_name, description, pattern in roles:
         conn.execute(sa.text("""
-            INSERT INTO iam_roles (scope, app_id, role_name, description, created_at, synthetic)
-            VALUES (:scope, :app_id, :role_name, :desc, :created_at, true)
-            ON CONFLICT DO NOTHING
-        """), {
+                INSERT INTO iam_roles (scope, app_id, role_name, description, created_at, synthetic, synthetic_pattern)
+                VALUES (:scope, :app_id, :role_name, :desc, :created_at, true, :pattern)
+                ON CONFLICT DO NOTHING
+            """), {
             "scope": "SMC",
             "app_id": access_manager_id,
             "role_name": role_name,
             "desc": description,
             "created_at": now,
+            "pattern": pattern,
         })
+
+    conn.execute((sa.text("""
+            update iam_roles set synthetic_pattern = 'policies' where role_name = 'PolicyReader' and scope = 'SMC';
+            update iam_roles set synthetic_pattern = 'iam' where role_name = 'IAMManager' and scope = 'SMC';
+        """)))
 
 
 def downgrade() -> None:
     conn = op.get_bind()
+
+    conn.execute((sa.text("""
+                update iam_roles set synthetic_pattern = NULL;
+            """)))
+
     result = conn.execute(sa.text("SELECT id FROM apps WHERE name = 'Access Manager'"))
     row = result.fetchone()
     if not row:

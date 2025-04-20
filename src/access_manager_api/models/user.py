@@ -15,10 +15,6 @@ class User(Base):
     org_id = mapped_column(Uuid, ForeignKey("orgs.id"))
     role = mapped_column(String, nullable=True)
     is_super_admin = mapped_column(Boolean, nullable=False, default=False)
-    is_sales_owner = mapped_column(Boolean, nullable=False, default=False)
-    invited_at = mapped_column(DateTime, default=datetime.now(timezone.utc))
-    accepted_at = mapped_column(DateTime, default=None)
-    deleted_at = mapped_column(DateTime, default=None)
     
     # Relationships
     org = relationship("Org", back_populates="users")

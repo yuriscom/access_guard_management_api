@@ -1,8 +1,8 @@
-"""create SMC Access Manager built-in roles
+"""org_admin built-in role
 
-Revision ID: 0002_built_in_roles
-Revises: 0001_init_iam_tables
-Create Date: 2025-04-19 11:37:12.407205
+Revision ID: 0003_role_org_admin
+Revises: 0002_built_in_roles
+Create Date: 2025-04-19 15:23:51.315984
 
 """
 from datetime import datetime
@@ -11,20 +11,16 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
-revision: str = '0002_built_in_roles'
-down_revision: Union[str, None] = '0001_init_iam_tables'
+revision: str = '0003_role_org_admin'
+down_revision: Union[str, None] = '0002_built_in_roles'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-
 roles = [
-    ("IAMManager", "Manage IAM resources for a specific product"),
-    ("PolicyReader", "Read-only access to policies for system clients"),
-    ("AMAdmin", "Full access to all Access Manager operations"),
-    ("Superadmin", "Full access to all SMC operations across applications")
+    ("OrgAdmin", "Full access to all Product operations across applications")
 ]
+
 
 def upgrade() -> None:
     conn = op.get_bind()
@@ -32,6 +28,10 @@ def upgrade() -> None:
     row = result.fetchone()
     if not row:
         raise RuntimeError("App 'Access Manager' not found in apps table.")
+
+    conn.execute((sa.text("""
+        ALTER TABLE org_apps ADD COLUMN is_owner BOOLEAN DEFAULT FALSE;
+    """)))
 
     access_manager_id = str(row[0])
     now = datetime.utcnow()
@@ -67,3 +67,7 @@ def downgrade() -> None:
             "app_id": access_manager_id,
             "role_name": role_name,
         })
+
+    conn.execute((sa.text("""
+            ALTER TABLE org_apps DROP COLUMN if exists is_owner;
+        """)))

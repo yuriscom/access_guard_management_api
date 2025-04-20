@@ -9,7 +9,7 @@ class Permission(BaseModel):
 
 
 class UserAccess(BaseModel):
-    user_id: int
+    user_id: str
     user_name: str
     scope: str
     roles: List[str]
@@ -17,7 +17,7 @@ class UserAccess(BaseModel):
 
 
 class PermissionCheck(BaseModel):
-    user_id: int
+    user_id: str
     resource: str
     action: str
 

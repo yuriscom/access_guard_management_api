@@ -3,6 +3,7 @@ from access_guard.authz.models.enums import PolicyLoaderType
 from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 from fastapi import Depends
 from sqlalchemy.orm import Session
+from uuid import uuid4
 
 from access_manager_api.config import settings
 from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider

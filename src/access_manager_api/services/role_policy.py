@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
@@ -11,22 +12,22 @@ class IAMRolePolicyService:
         self.db = db
 
     def create_policy(self, policy: IAMRolePolicyCreate) -> IAMRolePolicy:
-        db_policy = IAMRolePolicy(**policy.model_dump())
+        db_policy = IAMRolePolicy(id=str(uuid4()), **policy.model_dump())
         self.db.add(db_policy)
         self.db.commit()
         self.db.refresh(db_policy)
         return db_policy
 
-    def get_policy(self, policy_id: int) -> Optional[IAMRolePolicy]:
+    def get_policy(self, policy_id: str) -> Optional[IAMRolePolicy]:
         return self.db.query(IAMRolePolicy).filter(IAMRolePolicy.id == policy_id).first()
 
     def get_policies(self, skip: int = 0, limit: int = 100) -> List[IAMRolePolicy]:
         return self.db.query(IAMRolePolicy).offset(skip).limit(limit).all()
 
-    def get_policies_by_role(self, role_id: int) -> List[IAMRolePolicy]:
+    def get_policies_by_role(self, role_id: str) -> List[IAMRolePolicy]:
         return self.db.query(IAMRolePolicy).filter(IAMRolePolicy.role_id == role_id).all()
 
-    def update_policy(self, policy_id: int, policy: IAMRolePolicyCreate) -> Optional[IAMRolePolicy]:
+    def update_policy(self, policy_id: str, policy: IAMRolePolicyCreate) -> Optional[IAMRolePolicy]:
         db_policy = self.get_policy(policy_id)
         if db_policy:
             for key, value in policy.model_dump().items():
@@ -35,7 +36,7 @@ class IAMRolePolicyService:
             self.db.refresh(db_policy)
         return db_policy
 
-    def delete_policy(self, policy_id: int) -> bool:
+    def delete_policy(self, policy_id: str) -> bool:
         db_policy = self.get_policy(policy_id)
         if db_policy:
             self.db.delete(db_policy)

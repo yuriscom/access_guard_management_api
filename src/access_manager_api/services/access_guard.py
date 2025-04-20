@@ -4,6 +4,7 @@ from access_guard.authz import get_permissions_enforcer
 from access_guard.authz.models.enums import PolicyLoaderType
 from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 
+from access_manager_api.app_context import get_access_manager_app_id
 from access_manager_api.config import settings
 from access_manager_api.models import Scope
 from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
@@ -27,7 +28,7 @@ def get_access_guard_enforcer():
         "policy_loader_type": PolicyLoaderType.DB,
         "filter": {
             "policy_api_scope": Scope.SMC.name,
-            "policy_api_appid": 42
+            "policy_api_appid": get_access_manager_app_id()
         }
     }
 

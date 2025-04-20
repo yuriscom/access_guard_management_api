@@ -15,8 +15,8 @@ router = APIRouter(prefix="/iam/access", tags=["iam-access"])
 
 @router.get("/check-permission")
 async def check_permission_get(
-        user_id: int = Query(..., description="User ID"),
-        resource_id: int = Query(..., description="Resource ID"),
+        user_id: str = Query(..., description="User ID"),
+        resource_id: str = Query(..., description="Resource ID"),
         action: str = Query(..., description="Action to check"),
         db: Session = Depends(get_db),
         access_guard_enforcer=Depends(get_access_guard_enforcer)
@@ -48,9 +48,9 @@ async def check_permission_get(
 
 @router.get("/user-access", response_model=UserAccess)
 def get_user_access_info(
-        user_id: int,
+        user_id: str,
         scope: str,
-        app_id: int = None,
+        app_id: str = None,
         db: Session = Depends(get_db)
 ):
     """Get user access information including roles and permissions."""

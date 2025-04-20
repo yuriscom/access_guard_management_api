@@ -14,8 +14,18 @@ class IAMRolePolicyCreate(IAMRolePolicyBase):
     pass
 
 class IAMRolePolicy(IAMRolePolicyBase):
-    id: int
+    id: str
     created_at: datetime
+
+    @classmethod
+    def from_orm(cls, obj):
+        return cls(
+            id=str(obj.id),
+            role_id=str(obj.role_id),
+            permission_id=str(obj.permission_id),
+            effect=obj.effect,
+            created_at=obj.created_at
+        )
 
     class Config:
         from_attributes = True 

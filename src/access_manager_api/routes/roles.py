@@ -11,4 +11,5 @@ router = APIRouter(prefix="/iam/roles", tags=["iam-roles"])
 @router.post("/", response_model=IAMRole)
 def create_role(role: IAMRoleCreate, db: Session = Depends(get_db)):
     """Create a new IAM role"""
-    return create_iam_role(db, role)
+    db_role = create_iam_role(db, role)
+    return IAMRole.from_orm(db_role)

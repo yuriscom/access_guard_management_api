@@ -109,3 +109,38 @@ CREATE TABLE public.user_roles (
 	CONSTRAINT user_roles_role_id_fkey FOREIGN KEY (role_id) REFERENCES iam_roles(id) ON DELETE CASCADE,
 	CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+
+DO $$
+DECLARE
+    app_id UUID;
+    smc_org_id UUID;
+BEGIN
+    -- 1. Check if "access manager" app already exists
+    SELECT id INTO app_id FROM apps WHERE name = 'Access Manager';
+
+    IF app_id IS NULL THEN
+        -- Generate new UUID for app
+        app_id := gen_random_uuid();
+
+        -- Insert the app
+        INSERT INTO apps (id, name)
+        VALUES (app_id, 'Access Manager');
+
+        -- Find SMC org
+        SELECT id INTO smc_org_id FROM orgs WHERE name = 'SMC';
+
+        IF smc_org_id IS NULL THEN
+            RAISE EXCEPTION 'SMC organization not found';
+        END IF;
+
+        -- Link SMC to access manager app as owner
+        INSERT INTO org_apps (id, started_at, org_id, app_id)
+        VALUES (
+            gen_random_uuid(),
+            now(),
+            smc_org_id,
+            app_id
+        );
+    END IF;
+END $$;
