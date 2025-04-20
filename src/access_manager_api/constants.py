@@ -9,6 +9,8 @@ ROLE_AM_ADMIN = "AMAdmin"
 ROLE_POLICY_READER = "PolicyReader"
 ROLE_IAM_MANAGER = "IAMManager"
 ROLE_ORG_ADMIN = "OrgAdmin"
+ROLE_BILLING_VIEWER = "BillingViewer"
+ROLE_REPORTING_USER = "ReportingUser"
 ROLE_USER_ADMIN = "admin"
 
 ## Models

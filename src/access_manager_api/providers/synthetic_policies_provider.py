@@ -9,13 +9,37 @@ from access_manager_api import constants
 from access_manager_api.app_context import get_access_manager_app_id
 from access_manager_api.models import Scope
 
+# Which roles OrgAdmin inherits (resource mapping comes from DB)
+ORG_ADMIN_INHERITS = [
+    constants.ROLE_IAM_MANAGER,
+    constants.ROLE_BILLING_VIEWER,
+    constants.ROLE_REPORTING_USER,
+]
+
+# Will be filled by get_policies_from_synthetic_roles
+_ROLE_RESOURCE_PATTERN_CACHE: Dict[str, str] = {}
+
 
 def load_synthetic_policies(session: Session) -> List[Tuple[str, ...]]:
     return get_policies_from_synthetic_roles(session)
 
 
 def get_policies_from_synthetic_roles(db: Session) -> List[Tuple[str, ...]]:
+    global _ROLE_RESOURCE_PATTERN_CACHE
     access_manager_app_id = get_access_manager_app_id()
+
+    # Cache: role_name -> synthetic_pattern
+    _ROLE_RESOURCE_PATTERN_CACHE = {
+        row.role_name: row.synthetic_pattern
+        for row in db.execute(text("""
+            SELECT role_name, synthetic_pattern
+            FROM iam_roles
+            WHERE app_id = :app_id AND synthetic = true
+        """), {
+            "app_id": access_manager_app_id
+        }).fetchall()
+    }
+
     sql = text("""
         SELECT 
             u.id AS user_id,
@@ -98,18 +122,22 @@ def handle_org_admin_role(policies, role_name, app_id, pattern, user_ids, is_own
     if not is_owner:
         return  # Skip if the org is not the product owner
 
-    # Define role subjects
-    manager_subject = f"{Scope.SMC.name}/{access_manager_app_id}/{constants.ROLE_IAM_MANAGER}/{Scope.APP.name}/{app_id}"
-    role_subject = f"{Scope.SMC.name}/{access_manager_app_id}/{role_name}/{Scope.APP.name}/{app_id}"
-    resource = f"{Scope.SMC.name}/{access_manager_app_id}/iam/{Scope.APP.name}/{app_id}"
+    org_admin_subject = f"{Scope.SMC.name}/{access_manager_app_id}/{role_name}/{Scope.APP.name}/{app_id}"
 
-    # Give IAMManager full access to /iam
-    policies.append(("p", manager_subject, resource, "*", "allow"))
-    # OrgAdmin inherits IAMManager
-    policies.append(("g", role_subject, manager_subject))
-    # Users get OrgAdmin
+    for inherited_role in ORG_ADMIN_INHERITS:
+        # Load resource name for inherited role from DB pattern cache
+        pattern_row = _ROLE_RESOURCE_PATTERN_CACHE.get(inherited_role)
+        if not pattern_row:
+            continue  # Could raise/log an error if missing pattern
+
+        inherited_subject = f"{Scope.SMC.name}/{access_manager_app_id}/{inherited_role}/{Scope.APP.name}/{app_id}"
+        resource = f"{Scope.SMC.name}/{access_manager_app_id}/{pattern_row}/{Scope.APP.name}/{app_id}"
+
+        policies.append(("p", inherited_subject, resource, "*", "allow"))
+        policies.append(("g", org_admin_subject, inherited_subject))
+
     for user_id in user_ids:
-        policies.append(("g", str(user_id), role_subject))
+        policies.append(("g", str(user_id), org_admin_subject))
 
 
 # === Role Handler Registry ===
