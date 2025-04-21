@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
+from uuid import UUID
 
-from fastapi import Header, HTTPException, Depends
+from fastapi import Header, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 
 from access_manager_api.app_context import get_access_manager_app_id
@@ -15,13 +16,12 @@ def build_resource_path(resource_name: str, app_id: Optional[int]) -> str:
     return f"{Scope.SMC.name}/{get_access_manager_app_id()}/{resource_name}/APP/{app_id}"
 
 
-def get_user(
-        user_id: str = Header(..., alias="user_id"),
-        db: Session = Depends(get_db)
-) -> UserModel:
-    """
-    Dependency to load user from user_id header.
-    """
+def get_user(request: Request, db: Session = Depends(get_db)) -> UserModel:
+    try:
+        user_id = UUID(request.headers["user_id"])
+    except (KeyError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid or missing user_id header")
+
     user = db.query(UserModel).filter(UserModel.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
@@ -30,9 +30,9 @@ def get_user(
 
 def get_request_headers(
         user_id: Optional[str] = Header(None, alias="user_id"),
-        app_id: Optional[int] = Header(None, alias="app_id"),
+        app_id: Optional[str] = Header(None, alias="app_id"),
         scope: Optional[str] = Header(None, alias="scope")
-) -> Tuple[Optional[str], Optional[int], Optional[str]]:
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Extract common request headers for IAM operations.
     """

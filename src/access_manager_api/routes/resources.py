@@ -28,12 +28,13 @@ def create_resource(
         raise HTTPException(status_code=403, detail=str(e))
 
     """Create a new IAM resource"""
-    return create_iam_resource(db, resource)
+    db_resource = create_iam_resource(db, resource)
+    return IAMResource.from_orm(db_resource)
 
 
 @router.get("/{resource_id}", response_model=IAMResource)
 def read_resource_by_id(
-        resource_id: int,
+        resource_id: str,
         user: UserModel = Depends(get_user),
         access_guard_service=Depends(get_access_guard_enforcer),
         db: Session = Depends(get_db)
@@ -48,7 +49,7 @@ def read_resource_by_id(
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
 
-    return resource
+    return IAMResource.from_orm(resource)
 
 
 @router.get("/", response_model=List[IAMResource])
@@ -65,7 +66,8 @@ def read_resources_by_scope_app(
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
 
-    return operations.get_iam_resources_by_scope_app(db, scope, app_id)
+    resources = operations.get_iam_resources_by_scope_app(db, scope, app_id)
+    return [IAMResource.from_orm(resource) for resource in resources]
 
 
 @router.put("/{resource_id}", response_model=IAMResource)

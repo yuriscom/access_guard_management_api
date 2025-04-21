@@ -2,13 +2,15 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text
 from sqlalchemy.orm import relationship
 from access_manager_api.models.base import Base
 from access_manager_api.models.enums import Scope
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 
 class IAMResource(Base):
     __tablename__ = 'iam_resources'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     scope = Column(Enum(Scope), nullable=False)
-    app_id = Column(Integer, ForeignKey('apps.id', ondelete='CASCADE'), nullable=True)
+    app_id = Column(UUID(as_uuid=True), ForeignKey('apps.id', ondelete='CASCADE'), nullable=True)
     resource_name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())

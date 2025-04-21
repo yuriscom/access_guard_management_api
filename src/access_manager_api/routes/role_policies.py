@@ -12,7 +12,8 @@ router = APIRouter(prefix="/iam/role/policies", tags=["iam-policies"])
 def create_policy(policy: IAMRolePolicyCreate, db: Session = Depends(get_db)):
     """Create a new IAM policy"""
     try:
-        return create_iam_role_policy(db, policy)
+        db_policy = create_iam_role_policy(db, policy)
+        return IAMRolePolicy.from_orm(db_policy)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

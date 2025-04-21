@@ -1,13 +1,20 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from sqlalchemy import String, ForeignKey, Uuid, Boolean, DateTime
+from sqlalchemy.orm import relationship, mapped_column
+
 from access_manager_api.models.base import Base
+
 
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(255), nullable=False, unique=True)
-    org_id = Column(Integer, ForeignKey('orgs.id', ondelete='CASCADE'), nullable=False)
+    id = mapped_column(Uuid, primary_key=True, default=uuid4)
+    email = mapped_column(String, nullable=False, unique=True)
+    org_id = mapped_column(Uuid, ForeignKey("orgs.id"))
+    role = mapped_column(String, nullable=True)
+    is_super_admin = mapped_column(Boolean, nullable=False, default=False)
     
     # Relationships
     org = relationship("Org", back_populates="users")

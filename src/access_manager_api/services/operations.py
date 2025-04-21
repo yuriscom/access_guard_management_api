@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 from typing import Set
+from uuid import uuid4
 
 from access_guard.authz import get_permissions_enforcer
 from access_guard.authz.models.enums import PolicyLoaderType
@@ -17,18 +18,18 @@ from access_manager_api.schemas import UserAccess, Permission
 
 
 def create_iam_resource(db: Session, resource: IAMResourceCreate) -> IAMResource:
-    db_resource = IAMResource(**resource.model_dump())
+    db_resource = IAMResource(id=str(uuid4()), **resource.model_dump())
     db.add(db_resource)
     db.commit()
     db.refresh(db_resource)
     return db_resource
 
 
-def get_iam_resource_by_id(db: Session, resource_id: int) -> IAMResource:
+def get_iam_resource_by_id(db: Session, resource_id: str) -> IAMResource:
     return db.query(IAMResource).filter(IAMResource.id == resource_id).first()
 
 
-def get_iam_resources_by_scope_app(db: Session, scope: str, app_id: Optional[int]) -> List[IAMResource]:
+def get_iam_resources_by_scope_app(db: Session, scope: str, app_id: Optional[str]) -> List[IAMResource]:
     query = db.query(IAMResource).filter(IAMResource.scope == scope)
 
     if not app_id:
@@ -62,7 +63,7 @@ def delete_iam_resource(
 
 
 def create_iam_role(db: Session, role: IAMRoleCreate) -> IAMRole:
-    db_role = IAMRole(**role.model_dump())
+    db_role = IAMRole(id=str(uuid4()), **role.model_dump())
     db.add(db_role)
     db.commit()
     db.refresh(db_role)
@@ -70,7 +71,7 @@ def create_iam_role(db: Session, role: IAMRoleCreate) -> IAMRole:
 
 
 def create_iam_permission(db: Session, permission: IAMPermissionCreate) -> IAMPermission:
-    db_permission = IAMPermission(**permission.model_dump())
+    db_permission = IAMPermission(id=str(uuid4()), **permission.model_dump())
     db.add(db_permission)
     db.commit()
     db.refresh(db_permission)
@@ -78,7 +79,7 @@ def create_iam_permission(db: Session, permission: IAMPermissionCreate) -> IAMPe
 
 
 def create_iam_role_policy(db: Session, policy: IAMRolePolicyCreate) -> IAMRolePolicy:
-    db_policy = IAMRolePolicy(**policy.model_dump())
+    db_policy = IAMRolePolicy(id=str(uuid4()), **policy.model_dump())
     db.add(db_policy)
     db.commit()
     db.refresh(db_policy)
@@ -86,7 +87,7 @@ def create_iam_role_policy(db: Session, policy: IAMRolePolicyCreate) -> IAMRoleP
 
 
 def create_iam_user_policy(db: Session, policy: IAMUserPolicyCreate) -> IAMUserPolicy:
-    db_policy = IAMUserPolicy(**policy.model_dump())
+    db_policy = IAMUserPolicy(id=str(uuid4()), **policy.model_dump())
     db.add(db_policy)
     db.commit()
     db.refresh(db_policy)
@@ -94,7 +95,7 @@ def create_iam_user_policy(db: Session, policy: IAMUserPolicyCreate) -> IAMUserP
 
 
 def create_user_role(db: Session, user_role: UserRoleCreate) -> UserRole:
-    db_user_role = UserRole(**user_role.model_dump())
+    db_user_role = UserRole(id=str(uuid4()), **user_role.model_dump())
     db.add(db_user_role)
     db.commit()
     db.refresh(db_user_role)
@@ -130,9 +131,9 @@ def delete_user_role(db: Session, user_role_id: int) -> bool:
 
 def get_user_access(
         db: Session,
-        user_id: int,
+        user_id: str,
         scope: str,
-        app_id: Optional[int] = None
+        app_id: Optional[str] = None
 ) -> Optional[UserAccess]:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:

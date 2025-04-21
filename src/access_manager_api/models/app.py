@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, Text
-from sqlalchemy.orm import relationship
+import uuid
+
+from sqlalchemy import String, Uuid, JSON
+from sqlalchemy.orm import relationship, mapped_column
 
 from access_manager_api.models.base import Base
 
@@ -7,9 +9,10 @@ from access_manager_api.models.base import Base
 class App(Base):
     __tablename__ = 'apps'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(255), nullable=False, unique=True)
-    description = Column(Text, nullable=True)
+    id = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    name = mapped_column(String, unique=True, index=True)
+    roles = mapped_column(JSON, nullable=True)
+
     
     # Relationships
     resources = relationship("IAMResource", back_populates="app")

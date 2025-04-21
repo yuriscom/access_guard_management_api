@@ -12,7 +12,8 @@ router = APIRouter(prefix="/iam/user-roles", tags=["iam-user-roles"])
 def create_user_role_assignment(user_role: UserRoleCreate, db: Session = Depends(get_db)):
     """Assign a role to a user"""
     try:
-        return create_user_role(db, user_role)
+        db_user_role = create_user_role(db, user_role)
+        return UserRole.from_orm(db_user_role)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
