@@ -44,8 +44,8 @@ def synthetic_app_policies_for_org_admin(db: Session, app_id: UUID) -> List[Tupl
 
     policies: List[Tuple[str, ...]] = []
     for row in rows:
-        role_subject = f"app/{app_id}/{constants.ROLE_ORG_ADMIN}"
-        resource = f"app/{app_id}/*"
+        role_subject = f"{Scope.APP.name}/{app_id}/{constants.ROLE_ORG_ADMIN}"
+        resource = f"{Scope.APP.name}/{app_id}/*"
 
         policies.append(("p", role_subject, resource, "*", "allow"))
         policies.append(("g", str(row.user_id), role_subject))
