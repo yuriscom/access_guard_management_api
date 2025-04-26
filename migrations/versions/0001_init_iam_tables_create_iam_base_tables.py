@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    sql_path = pathlib.Path(__file__).parent.parent / "sql" / "init.sql"
+    sql_path = pathlib.Path(__file__).parent.parent / "sql" / "0001_init.sql"
     with sql_path.open("r") as f:
         sql = f.read()
     op.execute(sql)

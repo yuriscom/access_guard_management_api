@@ -7,9 +7,9 @@ from access_manager_api.models.org_apps import OrgApps
 from access_manager_api.models.permission import IAMPermission
 from access_manager_api.models.resource import IAMResource
 from access_manager_api.models.role import IAMRole
-from access_manager_api.models.role_policy import IAMRolePolicy
+from access_manager_api.models.role_permissions import IAMRolePermission
 from access_manager_api.models.user import User
-from access_manager_api.models.user_policy import IAMUserPolicy
-from access_manager_api.models.user_role import UserRole
+from access_manager_api.models.user_permissions import IAMUserPermission
+from access_manager_api.models.user_roles import IAMUserRole
 
 Base = declarative_base()

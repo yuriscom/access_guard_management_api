@@ -1,49 +1,16 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from access_manager_api.models import User as UserModel, IAMResource as IAMResourceModel
+from access_manager_api.infra.error_handling import UnknownException
 from access_manager_api.schemas import UserAccess
 from access_manager_api.services import get_user_access
-from access_manager_api.services.access_guard import get_access_guard_enforcer
-from access_manager_api.services.db import get_db
+from access_manager_api.infra.access_guard import get_access_guard_enforcer
+from access_manager_api.infra.database import get_db
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/iam/access", tags=["iam-access"])
-
-
-@router.get("/check-permission")
-async def check_permission_get(
-        user_id: str = Query(..., description="User ID"),
-        resource_id: str = Query(..., description="Resource ID"),
-        action: str = Query(..., description="Action to check"),
-        db: Session = Depends(get_db),
-        access_guard_enforcer=Depends(get_access_guard_enforcer)
-):
-    """Check permission using database IDs"""
-    # Get user and resource names
-    user = db.query(UserModel).filter(UserModel.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
-
-    resource = db.query(IAMResourceModel).filter(IAMResourceModel.id == resource_id).first()
-    if not resource:
-        raise HTTPException(status_code=404, detail=f"Resource with id {resource_id} not found")
-
-    logger.debug(f"Checking permission for user {user.name} on resource {resource.resource_name} with action {action}")
-
-    allowed = access_guard_enforcer.enforce(user, resource.get_policy_object(), action)
-    logger.debug(f"Permission check result: {allowed}")
-
-    return {
-        "allowed": allowed,
-        "user_id": user_id,
-        "user_name": user.name,
-        "resource_id": resource_id,
-        "resource_name": resource.resource_name,
-        "action": action
-    }
 
 
 @router.get("/user-access", response_model=UserAccess)
@@ -53,11 +20,10 @@ def get_user_access_info(
         app_id: str = None,
         db: Session = Depends(get_db)
 ):
-    """Get user access information including roles and permissions."""
     try:
         return get_user_access(db, user_id, scope, app_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise UnknownException(str(e))
 
 
 @router.post("/refresh")

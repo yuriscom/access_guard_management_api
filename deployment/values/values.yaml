@@ -1,0 +1,67 @@
+namespace: core
+environment: staging
+component: api 
+partOf: core
+replicaCount: 2
+spec:
+  strategy: 
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+containers:
+  appPort: 8080
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 100m
+
+  livenessProbe:
+    httpGet:
+      path: /status/live
+      port: 8080
+      scheme: HTTP
+    initialDelaySeconds: 25
+    periodSeconds: 2
+    failureThreshold: 2
+    timeoutSeconds: 2
+  readinessProbe: 
+    httpGet:
+      path: /status/ready
+      port: 8080
+      scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 2
+    failureThreshold: 1
+    timeoutSeconds: 2
+  volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: config
+      mountPath: /config
+volumes:
+    - name: tmp
+      emptyDir: {}
+    - name: config
+      secret:
+        secretName: config 
+
+service:
+  servicePort: 80
+  spec: | 
+    type: ClusterIP
+    selector:
+      app: {{ .Values.name }}
+    ports:
+      - protocol: TCP
+        port: {{ .Values.service.servicePort }}
+        targetPort: {{ .Values.containers.appPort }}
+
+externalSecrets:
+  enabled: true
+  name: external-secret-config-secret # Name of external-secret definition
+  refreshInterval: 1h # How often should we refresh the secret
+  store: gcp-store # Name of the ClusterSecretStore installed on cluster.
+  secretName: config # name of secret to be created.
+  data: 
+    - secretKey: config.json 
+      remoteRef: core-core-common-config-secret

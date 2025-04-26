@@ -1,0 +1,6 @@
+replicaCount: 3
+environment: prod
+containers:
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: "wid-core-api@plat-shared-msvc-prod.iam.gserviceaccount.com"

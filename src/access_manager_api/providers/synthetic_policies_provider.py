@@ -5,8 +5,8 @@ from uuid import UUID
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from access_manager_api import constants
-from access_manager_api.app_context import get_access_manager_app_id
+from access_manager_api.infra import constants
+from access_manager_api.infra.app_context import get_access_manager_app_id
 from access_manager_api.models import Scope
 
 # Which roles OrgAdmin inherits (resource mapping comes from DB)
@@ -43,6 +43,7 @@ def get_policies_from_synthetic_roles(db: Session) -> List[Tuple[str, ...]]:
     sql = text("""
         SELECT 
             u.id AS user_id,
+            u.email as user_email,
             a.id AS app_id,
             ir.role_name,
             ir.synthetic_pattern,
@@ -51,7 +52,7 @@ def get_policies_from_synthetic_roles(db: Session) -> List[Tuple[str, ...]]:
         JOIN orgs o ON o.id = u.org_id
         JOIN org_apps oa ON oa.org_id = o.id
         JOIN apps a ON a.id = oa.app_id
-        JOIN user_roles ur ON ur.user_id = u.id
+        JOIN iam_user_roles ur ON ur.user_id = u.id
         JOIN iam_roles ir ON ir.id = ur.role_id
         WHERE 
             u.role = :admin_user_role
@@ -68,13 +69,13 @@ def get_policies_from_synthetic_roles(db: Session) -> List[Tuple[str, ...]]:
         },
     ).fetchall()
 
-    grouped: defaultdict[Tuple[str, UUID, Optional[str], bool], List[UUID]] = defaultdict(list)
+    grouped: defaultdict[Tuple[str, UUID, Optional[str], bool], List[str]] = defaultdict(list)
     for row in rows:
         if row.role_name in [constants.ROLE_SUPERADMIN, constants.ROLE_AM_ADMIN]:
             if str(row.app_id) != access_manager_app_id:
                 continue
         key = (row.role_name, row.app_id, row.synthetic_pattern, row.is_owner)
-        grouped[key].append(row.user_id)
+        grouped[key].append(row.user_email)
 
     policies: List[Tuple[str, ...]] = []
     for (role_name, app_id, pattern, is_owner), user_ids in grouped.items():
@@ -103,7 +104,7 @@ def handle_policy_reader_role(policies, role_name, app_id, pattern, user_ids, is
 
 
 def handle_am_admin_role(policies, role_name, app_id, pattern, user_ids, is_owner, access_manager_app_id):
-    role_subject = f"{Scope.SMC.name}/{access_manager_app_id}/{role_name}/{Scope.APP.name}/{app_id}"
+    role_subject = f"{Scope.SMC.name}/{access_manager_app_id}/{role_name}"
     resource = f"{Scope.SMC.name}/{access_manager_app_id}/*"
     actions = ["*"]
 
@@ -111,7 +112,7 @@ def handle_am_admin_role(policies, role_name, app_id, pattern, user_ids, is_owne
 
 
 def handle_superadmin_role(policies, role_name, app_id, pattern, user_ids, is_owner, access_manager_app_id):
-    role_subject = f"{Scope.SMC.name}/{access_manager_app_id}/{role_name}/{Scope.APP.name}/{app_id}"
+    role_subject = f"{Scope.SMC.name}/{role_name}"
     resource = f"{Scope.SMC.name}/*"
     actions = ["*"]
 

@@ -3,4 +3,4 @@ from access_guard.authz.models.entities import User as AccessGuardUser
 
 
 def mapUserToAccessGuardUser(user: User) -> AccessGuardUser:
-    return AccessGuardUser(id=user.id, name=user.name)
+    return AccessGuardUser(id=user.id, name=user.email)

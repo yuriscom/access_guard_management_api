@@ -1,45 +1,102 @@
-from typing import List, Optional
-from uuid import uuid4
+import asyncio
+import logging
+from typing import List, Optional, Callable, Awaitable
 
-from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, joinedload
 
+from access_manager_api.infra.error_handling import AlreadyExistsException, UnknownException, NotFoundException
 from access_manager_api.models import IAMPermission
-from access_manager_api.schemas import IAMPermissionCreate
+from access_manager_api.schemas.permission import IAMPermissionCreate, IAMPermissionUpdate
+
+logger = logging.getLogger(__name__)
+PolicyRefreshHookType = Callable[[str, int, Session], Awaitable[None]]
 
 
 class IAMPermissionService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session,
+                 policy_refresh_hook: Optional[PolicyRefreshHookType] = None):
         self.db = db
+        self.policy_refresh_hook = policy_refresh_hook
 
-    def create_permission(self, permission: IAMPermissionCreate) -> IAMPermission:
-        db_permission = IAMPermission(id=str(uuid4()), **permission.model_dump())
-        self.db.add(db_permission)
-        self.db.commit()
-        self.db.refresh(db_permission)
-        return db_permission
+    async def create_permission(self, permission: IAMPermissionCreate) -> IAMPermission:
+        db_permission = IAMPermission(
+            resource_id=permission.resource_id,
+            action=permission.action
+        )
+        try:
+            self.db.add(db_permission)
+            self.db.commit()
+            self.db.refresh(db_permission)
+            if self.policy_refresh_hook:
+                asyncio.create_task(
+                    self.policy_refresh_hook(db_permission.resource.scope, db_permission.resource.app_id, self.db)
+                )
+            return db_permission
+        except IntegrityError:
+            self.db.rollback()
+            raise AlreadyExistsException("Permission already exists")
+        except Exception as e:
+            self.db.rollback()
+            print(f"Unhandled error: {e}")
+            raise UnknownException()
 
-    def get_permission(self, permission_id: str) -> Optional[IAMPermission]:
-        return self.db.query(IAMPermission).filter(IAMPermission.id == permission_id).first()
-
-    def get_permissions(self, skip: int = 0, limit: int = 100) -> List[IAMPermission]:
-        return self.db.query(IAMPermission).offset(skip).limit(limit).all()
+    def get_permission_by_id(self, permission_id: str) -> Optional[IAMPermission]:
+        # return self.db.query(IAMPermission).filter(IAMPermission.id == permission_id).first()
+        return self.db.query(IAMPermission) \
+            .options(joinedload(IAMPermission.resource)) \
+            .filter(IAMPermission.id == permission_id) \
+            .first()
 
     def get_permissions_by_resource(self, resource_id: str) -> List[IAMPermission]:
         return self.db.query(IAMPermission).filter(IAMPermission.resource_id == resource_id).all()
 
-    def update_permission(self, permission_id: str, permission: IAMPermissionCreate) -> Optional[IAMPermission]:
-        db_permission = self.get_permission(permission_id)
+    def update_permission_by_id(self, permission_id: str, permission: IAMPermissionUpdate) -> Optional[IAMPermission]:
+        db_permission = self.get_permission_by_id(permission_id)
         if db_permission:
             for key, value in permission.model_dump().items():
                 setattr(db_permission, key, value)
-            self.db.commit()
-            self.db.refresh(db_permission)
+            try:
+                self.db.commit()
+                self.db.refresh(db_permission)
+            except Exception:
+                self.db.rollback()
+                raise UnknownException()
         return db_permission
 
-    def delete_permission(self, permission_id: str) -> bool:
-        db_permission = self.get_permission(permission_id)
-        if db_permission:
+    def update_permission(self, db_permission: IAMPermission, permission_data: IAMPermissionUpdate) \
+            -> Optional[IAMPermission]:
+        if not db_permission:
+            raise NotFoundException("Entry not found")
+
+        for key, value in permission_data.model_dump().items():
+            setattr(db_permission, key, value)
+        try:
+            self.db.commit()
+            self.db.refresh(db_permission)
+            if self.policy_refresh_hook:
+                asyncio.create_task(
+                    self.policy_refresh_hook(db_permission.resource.scope, db_permission.resource.app_id, self.db)
+                )
+        except Exception as e:
+            self.db.rollback()
+            logger.warning(f"Failed to update permission. System said: {e}")
+            raise UnknownException()
+        return db_permission
+
+    async def delete_permission(self, db_permission: IAMPermission):
+        if not db_permission:
+            raise NotFoundException("Entry not found")
+
+        resource = db_permission.resource
+        try:
             self.db.delete(db_permission)
             self.db.commit()
-            return True
-        return False
+            if self.policy_refresh_hook:
+                asyncio.create_task(
+                    self.policy_refresh_hook(resource.scope, resource.app_id, self.db)
+                )
+        except Exception as e:
+            self.db.rollback()
+            logger.warning(f"Failed to delete permission. System said: {e}")
+            raise UnknownException()

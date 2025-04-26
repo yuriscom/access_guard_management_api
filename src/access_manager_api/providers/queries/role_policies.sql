@@ -10,7 +10,7 @@ WITH role_permissions AS (
             ELSE 'allow'
         END AS effect
     FROM iam_roles r
-    JOIN iam_role_policies rp ON rp.role_id = r.id
+    JOIN iam_role_permissions rp ON rp.role_id = r.id
     JOIN iam_permissions perm ON rp.permission_id = perm.id
     JOIN iam_resources res ON perm.resource_id = res.id
     WHERE r.id = :role_id

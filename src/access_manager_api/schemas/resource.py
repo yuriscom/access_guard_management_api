@@ -11,10 +11,21 @@ class IAMResourceBase(BaseModel):
     app_id: Optional[str] = None
     resource_name: str
     description: Optional[str] = None
+    synthetic: Optional[bool] = False
+    synthetic_pattern: Optional[str] = None
 
 
 class IAMResourceCreate(IAMResourceBase):
     pass
+
+
+class IAMResourceUpdate(BaseModel):
+    description: Optional[str] = None
+    synthetic: Optional[bool] = False
+    synthetic_pattern: Optional[str] = None
+
+    class Config:
+        extra = "forbid"
 
 
 class IAMResource(IAMResourceBase):

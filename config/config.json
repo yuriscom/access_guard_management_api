@@ -1,0 +1,22 @@
+{
+  "Infra": {
+    "Environment" : "local",
+    "DevelopmentMode": true
+  },
+  "AccessManager": {
+    "PolicyLoaderType": "DB"
+  },
+  "Redis": {
+    "Port": 6379,
+    "IPs": [
+      "localhost"
+    ]
+  },
+  "CoreDB": {
+    "Host": "localhost",
+    "Port": 5432,
+    "User": "root",
+    "Password": "root",
+    "Database": "test"
+  }
+}

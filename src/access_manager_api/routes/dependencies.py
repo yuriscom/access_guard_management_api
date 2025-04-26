@@ -4,16 +4,16 @@ from uuid import UUID
 from fastapi import Header, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 
-from access_manager_api.app_context import get_access_manager_app_id
+from access_manager_api.infra.app_context import get_access_manager_app_id
 from access_manager_api.models import User as UserModel, Scope
-from access_manager_api.services.db import get_db
+from access_manager_api.infra.database import get_db
 
 
-def build_resource_path(resource_name: str, app_id: Optional[int]) -> str:
+def build_resource_path(resource_name: str, app_id: Optional[str]) -> str:
     """
     Builds resource path string from resource name and app_id.
     """
-    return f"{Scope.SMC.name}/{get_access_manager_app_id()}/{resource_name}/APP/{app_id}"
+    return f"{Scope.SMC.name}/{get_access_manager_app_id()}/{resource_name}/{Scope.APP.name}/{app_id}"
 
 
 def get_user(request: Request, db: Session = Depends(get_db)) -> UserModel:

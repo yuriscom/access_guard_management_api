@@ -5,7 +5,7 @@ WITH role_permissions AS (
         res.scope || '/' || COALESCE(res.app_id::text, '') || '/' || res.resource_name AS object,
         perm.action AS action,
         COALESCE(rp.effect, 'allow') AS effect
-    FROM iam_role_policies rp
+    FROM iam_role_permissions rp
     JOIN iam_roles r ON rp.role_id = r.id
     JOIN iam_permissions perm ON rp.permission_id = perm.id
     JOIN iam_resources res ON perm.resource_id = res.id
@@ -16,11 +16,11 @@ WITH role_permissions AS (
 user_permissions AS (
     SELECT DISTINCT
         'p' AS ptype,
-        u.id::text AS subject,
+        u.email AS subject,
         res.scope || '/' || COALESCE(res.app_id::text, '') || '/' || res.resource_name AS object,
         perm.action AS action,
         COALESCE(up.effect, 'allow') AS effect
-    FROM iam_user_policies up
+    FROM iam_user_permissions up
     JOIN users u ON up.user_id = u.id
     JOIN iam_permissions perm ON up.permission_id = perm.id
     JOIN iam_resources res ON perm.resource_id = res.id
@@ -30,11 +30,11 @@ user_permissions AS (
 user_roles AS (
     SELECT DISTINCT
         'g' AS ptype,
-        u.id::text AS subject,
+        u.email AS subject,
         r.scope || '/' || COALESCE(r.app_id::text, '') || '/' || r.role_name AS object,
         NULL AS action,
         NULL AS effect
-    FROM user_roles ur
+    FROM iam_user_roles ur
     JOIN users u ON ur.user_id = u.id
     JOIN iam_roles r ON ur.role_id = r.id
     WHERE r.scope = :policy_api_scope AND (:policy_api_appid IS NULL OR r.app_id = :policy_api_appid)

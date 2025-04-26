@@ -16,7 +16,6 @@ def init_db(database_url: str):
     global _engine
     _engine = create_engine(database_url)
     SessionLocal.configure(bind=_engine)
-    Base.metadata.create_all(_engine)
     return _engine
 
 

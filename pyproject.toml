@@ -16,9 +16,12 @@ pydantic = ">=2.10.6,<3.0.0"
 pydantic-settings = ">=2.2.1,<3.0.0"
 dotenv = ">=0.9.9,<0.10.0"
 PyJWT = ">=2.8.0,<3.0.0"
+# # Add access-guard as local editable dependency
+# access-guard = {path = "../access-guard", develop = true}
+access-guard = { path = "../access-guard", develop = false }
+# access-guard = { git = "https://github.com/Stagwell-Marketing-Cloud/smc-access-guard.git", branch = "developer" }
 
-# Add access-guard as local editable dependency
-access-guard = {path = "../access-guard", develop = true}
+
 
 [tool.poetry.group.dev.dependencies]
 alembic = "^1.15.2"

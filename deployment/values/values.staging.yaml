@@ -1,0 +1,5 @@
+environment: staging
+containers:
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: "wid-core-api@plat-shared-msvc-staging.iam.gserviceaccount.com"

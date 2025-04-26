@@ -10,7 +10,7 @@ class Permission(BaseModel):
 
 class UserAccess(BaseModel):
     user_id: str
-    user_name: str
+    user_email: str
     scope: str
     roles: List[str]
     permissions: Dict[str, List[Permission]]

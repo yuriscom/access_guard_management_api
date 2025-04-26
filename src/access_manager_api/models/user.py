@@ -15,8 +15,8 @@ class User(Base):
     org_id = mapped_column(Uuid, ForeignKey("orgs.id"))
     role = mapped_column(String, nullable=True)
     is_super_admin = mapped_column(Boolean, nullable=False, default=False)
-    
+
     # Relationships
     org = relationship("Org", back_populates="users")
-    roles = relationship("UserRole", back_populates="user")
-    user_policies = relationship("IAMUserPolicy", back_populates="user")
+    roles = relationship("IAMUserRole", back_populates="user")
+    user_permissions = relationship("IAMUserPermission", back_populates="user")

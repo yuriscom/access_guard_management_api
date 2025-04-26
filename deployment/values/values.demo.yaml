@@ -1,0 +1,9 @@
+environment: demo
+containers:
+  extraEnv:
+    - name: Environment
+      value: "demo"
+
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: "wid-core-api@plat-shared-msvc-demo.iam.gserviceaccount.com"

@@ -2,10 +2,10 @@ from typing import List, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session
 
-from access_manager_api import constants
-from access_manager_api.app_context import get_access_manager_app_id
+from access_manager_api.infra import constants
+from access_manager_api.infra.app_context import get_access_manager_app_id
 from access_manager_api.models import Scope
-from access_manager_api.models import User, Org, OrgApps, App, UserRole, IAMRole
+from access_manager_api.models import User, Org, OrgApps, IAMUserRole, IAMRole
 
 
 # === Public Facade ===
@@ -25,19 +25,19 @@ def synthetic_app_policies_for_org_admin(db: Session, app_id: UUID) -> List[Tupl
     """
     access_manager_app_id = get_access_manager_app_id()
 
-    query = db.query(User.id.label("user_id"))\
+    query = db.query(User.email.label("user_id"))\
         .join(Org, Org.id == User.org_id)\
         .join(OrgApps, OrgApps.org_id == Org.id)\
-        .join(UserRole, UserRole.user_id == User.id)\
-        .join(IAMRole, IAMRole.id == UserRole.role_id)\
+        .join(IAMUserRole, IAMUserRole.user_id == User.id)\
+        .join(IAMRole, IAMRole.id == IAMUserRole.role_id)\
         .filter(
-            OrgApps.app_id == app_id,
-            OrgApps.is_owner == True,
-            User.role == constants.ROLE_USER_ADMIN,
-            IAMRole.role_name == constants.ROLE_ORG_ADMIN,
-            IAMRole.synthetic == True, # generic SMC-level OrgAdmin
-            IAMRole.scope == Scope.SMC.name, # generic SMC-level OrgAdmin
-            IAMRole.app_id == access_manager_app_id  # generic SMC-level OrgAdmin
+        OrgApps.app_id == app_id,
+        OrgApps.is_owner == True,
+        User.role == constants.ROLE_USER_ADMIN,
+        IAMRole.role_name == constants.ROLE_ORG_ADMIN,
+        IAMRole.synthetic == True, # generic SMC-level OrgAdmin
+        IAMRole.scope == Scope.SMC.name, # generic SMC-level OrgAdmin
+        IAMRole.app_id == access_manager_app_id  # generic SMC-level OrgAdmin
         )
 
     rows = query.all()

@@ -4,6 +4,14 @@ ROOT_DIR = Path(__file__).parent.parent.parent
 
 ACCESS_MANAGER_APP_NAME = "Access Manager"
 
+#ENVS
+ENV_LOCAL = "local"
+ENV_DEMO = "demo"
+ENV_DEV = "dev"
+ENV_STAGING = "staging"
+ENV_PROD = "prod"
+
+# ROLES
 ROLE_SUPERADMIN = "Superadmin"
 ROLE_AM_ADMIN = "AMAdmin"
 ROLE_POLICY_READER = "PolicyReader"

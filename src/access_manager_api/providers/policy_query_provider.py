@@ -19,8 +19,8 @@ class AccessManagementQueryProvider(PolicyQueryProvider):
     def get_filtered_policies_query(self, filter: dict):
         return QUERY_FILTERED_POLICIES, filter
 
-    def get_user_policy_query(self, user_id: str):
+    def get_user_policies_query(self, user_id: str):
         return QUERY_USER_POLICIES, {"user_id": user_id}
 
-    def get_role_policy_query(self, role_id: str):
+    def get_role_policies_query(self, role_id: str):
         return QUERY_ROLE_POLICIES, {"role_id": role_id}

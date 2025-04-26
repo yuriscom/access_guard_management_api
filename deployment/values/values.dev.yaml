@@ -1,0 +1,9 @@
+environment: dev
+containers:
+  extraEnv:
+    - name: Environment
+      value: "dev"
+
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: "wid-access-manager-api@plat-shared-msvc-dev.iam.gserviceaccount.com"
