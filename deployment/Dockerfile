@@ -27,7 +27,7 @@ COPY . .
 
 # Clone access-guard as sibling directory
 WORKDIR /workspace
-RUN git clone --branch ${ACCESS_GUARD_BRANCH} https://${GITHUB_TOKEN}@github.com/Stagwell-Marketing-Cloud/smc-access-guard.git access-guard
+RUN git clone --branch ${ACCESS_GUARD_BRANCH} https://${GITHUB_TOKEN}@github.com/yuriscom/access_guard.git access-guard
 
 # Go back into access-manager-api and install
 WORKDIR /workspace/access-manager-api
