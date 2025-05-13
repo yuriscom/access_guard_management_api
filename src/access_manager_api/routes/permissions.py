@@ -5,14 +5,22 @@ from access_guard.authz.models.entities import User
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from access_manager_api.infra.error_handling import UnauthorizedException, NotFoundException
-from access_manager_api.models import User as UserModel
-from access_manager_api.routes.dependencies import get_user, build_resource_path
-from access_manager_api.schemas.permission import IAMPermission, IAMPermissionCreate, IAMPermissionUpdate
-from access_manager_api.services import IAMResourceService
 from access_manager_api.infra.access_guard import get_access_guard_enforcer
 from access_manager_api.infra.database import get_db
+from access_manager_api.infra.error_handling import (
+    NotFoundException,
+    UnauthorizedException,
+)
+from access_manager_api.models import User as UserModel
+from access_manager_api.routes.dependencies import get_user
+from access_manager_api.schemas.permission import (
+    IAMPermission,
+    IAMPermissionCreate,
+    IAMPermissionUpdate,
+)
+from access_manager_api.services import IAMResourceService
 from access_manager_api.services.permission import IAMPermissionService
+from access_manager_api.utils.utils import build_resource_path
 from access_manager_api.utils.webhooks import send_policy_refresh_webhook
 
 router = APIRouter(prefix="/iam/permissions", tags=["iam-permissions"])

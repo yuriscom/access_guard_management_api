@@ -1,19 +1,22 @@
+import logging
 from typing import Tuple
 
 import jwt
 from access_guard.authz.exceptions import PermissionDeniedError
 from access_guard.authz.models.entities import User
 from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import Request
 
+from access_manager_api.infra.access_guard import get_access_guard_enforcer
 from access_manager_api.infra.config import settings
 from access_manager_api.models import User as UserModel
-from access_manager_api.routes import dependencies
 from access_manager_api.routes.dependencies import get_request_headers, get_user
 from access_manager_api.schemas.policies import PoliciesParams
-from access_manager_api.infra.access_guard import get_access_guard_enforcer
 from access_manager_api.services.policies import get_policies_service
+from access_manager_api.utils.utils import build_resource_path
 
 router = APIRouter(prefix="/iam")
+logger = logging.getLogger(__name__)
 
 
 async def validate_jwt(authorization: str = Header(...)) -> dict:
@@ -41,7 +44,8 @@ async def validate_jwt(authorization: str = Header(...)) -> dict:
 @router.get("/policies")
 async def get_policies(
         # jwt_claims: dict = Depends(validate_jwt),
-        headers: Tuple[str, int, str] = Depends(get_request_headers),
+        request: Request,
+        headers: Tuple[str, str, str] = Depends(get_request_headers),
         access_guard_service=Depends(get_access_guard_enforcer),
         policies_service=Depends(get_policies_service),
         user: UserModel = Depends(get_user)
@@ -49,11 +53,12 @@ async def get_policies(
     # Extract claims
     # user_id = jwt_claims["sub"]
     # app_id = jwt_claims.get("app_id")
+    logger.info("Request Headers:\n%s", "\n".join(f"{k}: {v}" for k, v in request.headers.items()))
 
     user_id, app_id, scope = headers
 
     # Construct the resource string
-    resource_path = dependencies.build_resource_path("policies", app_id)
+    resource_path = build_resource_path("policies", app_id)
 
     # Enforce access
     try:

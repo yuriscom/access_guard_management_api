@@ -19,28 +19,33 @@ class IAMRolePermissionsService:
         self.db = db
         self.policy_refresh_hook = policy_refresh_hook
 
-    async def create_role_permission(self, role_permission: IAMRolePermissionCreate) -> IAMRolePermission:
+    async def create_role_permission(self, role_permission: IAMRolePermissionCreate, commit: bool = True) -> IAMRolePermission:
         db_obj = IAMRolePermission(
             role_id=role_permission.role_id,
             permission_id=role_permission.permission_id,
             effect=role_permission.effect.value
         )
-        try:
-            self.db.add(db_obj)
-            self.db.commit()
-            self.db.refresh(db_obj)
-            if self.policy_refresh_hook:
-                asyncio.create_task(
-                    self.policy_refresh_hook(db_obj.role.scope, db_obj.role.app_id, self.db)
-                )
-            return db_obj
-        except IntegrityError as e:
-            self.db.rollback()
-            raise AlreadyExistsException("Role permission already exists")
-        except Exception as e:
-            self.db.rollback()
-            print(f"Unhandled error: {e}")
-            raise UnknownException()
+
+        self.db.add(db_obj)
+        if commit:
+            try:
+                self.db.commit()
+                self.db.refresh(db_obj)
+                if self.policy_refresh_hook:
+                    asyncio.create_task(
+                        self.policy_refresh_hook(db_obj.role.scope, db_obj.role.app_id, self.db)
+                    )
+            except IntegrityError as e:
+                self.db.rollback()
+                raise AlreadyExistsException("Role permission already exists")
+            except Exception as e:
+                self.db.rollback()
+                print(f"Unhandled error: {e}")
+                raise UnknownException()
+        else:
+            self.db.flush()
+
+        return db_obj
 
     def get_role_permission_by_id(self, rp_id: str) -> Optional[IAMRolePermission]:
         return (

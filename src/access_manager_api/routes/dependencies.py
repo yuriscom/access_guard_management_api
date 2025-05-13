@@ -9,13 +9,6 @@ from access_manager_api.models import User as UserModel, Scope
 from access_manager_api.infra.database import get_db
 
 
-def build_resource_path(resource_name: str, app_id: Optional[str]) -> str:
-    """
-    Builds resource path string from resource name and app_id.
-    """
-    return f"{Scope.SMC.name}/{get_access_manager_app_id()}/{resource_name}/{Scope.APP.name}/{app_id}"
-
-
 def get_user(request: Request, db: Session = Depends(get_db)) -> UserModel:
     try:
         user_id = UUID(request.headers["user_id"])

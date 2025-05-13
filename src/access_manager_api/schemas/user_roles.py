@@ -1,13 +1,13 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
-
+import uuid
 from access_manager_api.schemas.role import IAMRole
 
 
 class UserRoleBase(BaseModel):
-    user_id: str
-    role_id: str
+    user_id: uuid.UUID
+    role_id: uuid.UUID
 
 
 class UserRoleCreate(UserRoleBase):
@@ -15,14 +15,14 @@ class UserRoleCreate(UserRoleBase):
 
 
 class UserRoleUpdate(BaseModel):
-    role_id: Optional[str] = None
+    role_id: Optional[uuid.UUID] = None
 
     class Config:
         extra = "forbid"
 
 
 class UserRole(UserRoleBase):
-    id: str
+    id: uuid.UUID
     created_at: datetime
     role: Optional[IAMRole] = None  # Only return role object, not user
 

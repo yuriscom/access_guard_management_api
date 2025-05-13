@@ -14,7 +14,7 @@ class OrgApps(Base):
     id = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     org_id = Column(Integer, ForeignKey('orgs.id', ondelete='CASCADE'), nullable=False)
     app_id = Column(Integer, ForeignKey('apps.id', ondelete='CASCADE'), nullable=False)
-    is_owner = mapped_column(Boolean, nullable=False, default=False)
+    # is_owner = mapped_column(Boolean, nullable=False, default=False)
     started_at = mapped_column(DateTime, default=datetime.now(timezone.utc))
 
     # Relationships

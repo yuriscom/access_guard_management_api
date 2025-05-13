@@ -3,12 +3,15 @@ import logging
 from typing import List, Optional, Callable, Awaitable
 from uuid import UUID
 
+from access_manager_api.services import IAMPermissionService
+from access_manager_api.utils import utils
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from access_manager_api.infra.error_handling import AlreadyExistsException, UnknownException, NotFoundException
-from access_manager_api.models import IAMResource
-from access_manager_api.schemas import IAMResourceCreate
+from access_manager_api.models import IAMResource, Scope
+from access_manager_api.schemas import IAMResourceCreate, IAMPermissionCreate
 from access_manager_api.schemas.resource import IAMResourceUpdate
 
 PolicyRefreshHookType = Callable[[str, int, Session], Awaitable[None]]
@@ -21,33 +24,87 @@ class IAMResourceService:
         self.db = db
         self.policy_refresh_hook = policy_refresh_hook
 
-    async def create_resource(self, resource: IAMResourceCreate) -> IAMResource:
+    async def create_resource(self, resource: IAMResourceCreate, commit: bool = True) -> IAMResource:
         db_resource = IAMResource(
             scope=resource.scope,
-            app_id=UUID(resource.app_id) if resource.app_id else None,
+            app_id=utils.ensure_uuid(resource.app_id) if resource.app_id else None,
             resource_name=resource.resource_name,
             description=resource.description,
             synthetic=resource.synthetic,
-            synthetic_pattern=resource.synthetic_pattern
+            synthetic_data=resource.synthetic_data
         )
 
+        self.db.add(db_resource)
+
+        if commit:
+            try:
+                self.db.commit()
+                self.db.refresh(db_resource)
+                if self.policy_refresh_hook:
+                    asyncio.create_task(self.policy_refresh_hook(db_resource.scope, db_resource.app_id, self.db))
+            except IntegrityError as e:
+                self.db.rollback()
+                raise AlreadyExistsException(f"IAM resource {resource.resource_name} already exists ")
+            except Exception as e:
+                self.db.rollback()
+                print(f"Unhandled error: {e}")
+                raise UnknownException()
+        else:
+            self.db.flush()
+        return db_resource
+
+    async def create_or_get_resource_with_actions(self, data: IAMResourceCreate) -> IAMResource:
         try:
-            self.db.add(db_resource)
-            self.db.commit()
-            self.db.refresh(db_resource)
-            if self.policy_refresh_hook:
-                asyncio.create_task(self.policy_refresh_hook(db_resource.scope, db_resource.app_id, self.db))
-            return db_resource
-        except IntegrityError as e:
+            # Try to create resource (may raise if exists)
+            resource = await self.create_resource(data, commit=False)
+        except IntegrityError:
             self.db.rollback()
-            raise AlreadyExistsException(f"IAM resource {resource.resource_name} already exists ")
+            resource = await self.get_resource_by_name(
+                scope=data.scope,
+                app_id=data.app_id,
+                resource_name=data.resource_name
+            )
+        if not resource:
+            raise NotFoundException(f"Failed to create or retrieve resource {data.resource_name}")
+
+        # Handle actions
+        if data.actions:
+            permission_service = IAMPermissionService(self.db)
+            for action in data.actions:
+                try:
+                    await permission_service.create_permission(
+                        IAMPermissionCreate(resource_id=resource.id, action=action),
+                        commit=False)
+                except:
+                    self.db.rollback()
+                    logger.warning(
+                        f"Could not assign action '{action}' to resource '{resource.resource_name}' "
+                        f"(ID: {resource.id}) — likely already assigned."
+                    )
+
+        try:
+            self.db.commit()
+            self.db.refresh(resource)
+            if self.policy_refresh_hook:
+                asyncio.create_task(self.policy_refresh_hook(resource.scope, resource.app_id, self.db))
         except Exception as e:
             self.db.rollback()
-            print(f"Unhandled error: {e}")
+            logger.error(f"Unhandled error during commit: {e}")
             raise UnknownException()
+
+        return resource
 
     async def get_resource_by_id(self, resource_id: int) -> Optional[IAMResource]:
         return self.db.query(IAMResource).filter(IAMResource.id == resource_id).first()
+
+    async def get_resource_by_name(self, resource_name: str, scope: Scope, app_id: UUID = None) \
+            -> Optional[IAMResource]:
+        query = self.db.query(IAMResource).filter(
+            IAMResource.resource_name == resource_name,
+            IAMResource.scope == scope,
+            IAMResource.app_id == app_id,
+        )
+        return query.first()
 
     async def get_resources_by_scope_app(self, scope: str, app_id: Optional[str]) -> List[IAMResource]:
         query = self.db.query(IAMResource).filter(IAMResource.scope == scope)

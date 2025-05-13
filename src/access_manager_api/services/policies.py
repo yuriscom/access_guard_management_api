@@ -1,15 +1,16 @@
 from typing import Optional
 
 from access_guard.authz.factory import get_permissions_enforcer
-from access_guard.authz.models.enums import PolicyLoaderType
+from access_guard.authz.loaders.policy_code_loader import PolicyCodeLoader
+from access_guard.authz.loaders.policy_db_loader import PolicyDbLoader
 from access_guard.authz.models.permissions_enforcer_params import PermissionsEnforcerParams
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from access_manager_api.infra.database import get_db
 from access_manager_api.providers.policy_query_provider import AccessManagementQueryProvider
-from access_manager_api.providers.synthetic_policies_applications_provider import load_synthetic_policies
+from access_manager_api.providers.synthetic_policies_applications_provider import SyntheticAppPoliciesProvider
 from access_manager_api.schemas.policies import PoliciesParams
-from access_manager_api.infra.database import get_db, db_session_scope
 
 
 class PoliciesService:
@@ -17,8 +18,13 @@ class PoliciesService:
         self.db = db
 
     def get_policies(self, policiesParams: PoliciesParams):
+        policy_loaders = [
+            PolicyDbLoader(AccessManagementQueryProvider(), self.db.bind),
+        ]
+        if policiesParams.app_id:
+            policy_loaders.append(PolicyCodeLoader(policy_provider=SyntheticAppPoliciesProvider(self.db)))
+
         params_dict = {
-            "policy_loader_type": PolicyLoaderType.DB,
             "filter": {
                 "policy_api_scope": policiesParams.scope,
                 "policy_api_appid": str(policiesParams.app_id) if policiesParams.app_id is not None else None,
@@ -28,20 +34,10 @@ class PoliciesService:
 
         enforcer_settings = PermissionsEnforcerParams(**params_dict);
 
-        if policiesParams.app_id:
-            # Lazy policy provider to inject current db session
-            def synthetic_policy_provider():
-                with db_session_scope() as db:
-                    return load_synthetic_policies(db, policiesParams.app_id)
-        else:
-            synthetic_policy_provider = None
-
         enforcer = get_permissions_enforcer(
             settings=enforcer_settings,
-            engine=self.db.bind,
             new_instance=True,
-            query_provider=AccessManagementQueryProvider(),
-            synthetic_policy_provider=synthetic_policy_provider
+            policy_loaders=policy_loaders
         )
 
         resource_prefix = f"{policiesParams.scope}/{policiesParams.app_id}/"

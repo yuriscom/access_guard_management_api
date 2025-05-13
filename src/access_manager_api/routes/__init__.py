@@ -8,7 +8,8 @@ from access_manager_api.routes import (
     roles,
     resources,
     access,
-    policies
+    policies,
+    products
 )
 
 # router = APIRouter(prefix="/api/v1")
@@ -23,3 +24,4 @@ router.include_router(roles.router)
 router.include_router(resources.router)
 router.include_router(access.router)
 router.include_router(policies.router)
+router.include_router(products.router)

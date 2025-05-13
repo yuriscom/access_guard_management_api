@@ -8,11 +8,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from access_manager_api.infra.error_handling import UnauthorizedException, NotFoundException
 from access_manager_api.models import IAMPermission, IAMUserPermission, User as UserModel
-from access_manager_api.routes.dependencies import get_user, build_resource_path
+from access_manager_api.routes.dependencies import get_user
 from access_manager_api.schemas.user_permissions import IAMUserPermission, IAMUserPermissionCreate
 from access_manager_api.infra.access_guard import get_access_guard_enforcer
 from access_manager_api.infra.database import get_db
 from access_manager_api.services.user_permissions import IAMUserPermissionsService
+from access_manager_api.utils.utils import build_resource_path
 from access_manager_api.utils.webhooks import send_policy_refresh_webhook
 
 router = APIRouter(prefix="/iam/user-permissions", tags=["iam-user-permissions"])

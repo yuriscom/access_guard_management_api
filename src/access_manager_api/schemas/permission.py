@@ -1,14 +1,15 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID
 
 from access_manager_api.schemas.resource import IAMResource
 
 
 class IAMPermissionBase(BaseModel):
-    resource_id: str
+    resource_id: UUID
     action: str
-    resource: Optional[IAMResource] = None  # <-- added field
+    resource: Optional[IAMResource] = None
 
 
 class IAMPermissionCreate(IAMPermissionBase):
@@ -23,7 +24,7 @@ class IAMPermissionUpdate(BaseModel):
 
 
 class IAMPermission(IAMPermissionBase):
-    id: str
+    id: UUID
     created_at: datetime
 
     @classmethod

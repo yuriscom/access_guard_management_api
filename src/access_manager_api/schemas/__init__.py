@@ -1,5 +1,5 @@
 from access_manager_api.schemas import user_permissions, role_permissions, common, user_roles, role, permission, resource
-from access_manager_api.schemas.access import UserAccess, PermissionCheck, PermissionsList, Permission
+from access_manager_api.schemas.access import UserAccess, Permission
 from access_manager_api.schemas.permission import IAMPermission, IAMPermissionCreate, IAMPermissionBase
 from access_manager_api.schemas.resource import IAMResource, IAMResourceCreate, IAMResourceBase
 from access_manager_api.schemas.role import IAMRole, IAMRoleCreate, IAMRoleBase
@@ -13,5 +13,5 @@ __all__ = [
     'IAMPermission', 'IAMPermissionCreate', 'IAMPermissionBase',
     'IAMRolePermission', 'IAMRolePermissionCreate', 'IAMRolePermissionBase',
     'IAMUserPermission', 'IAMUserPermissionCreate', 'IAMUserPermissionBase',
-    'UserRole', 'UserAccess', 'UserRoleCreate', 'UserRoleBase', 'PermissionCheck', 'PermissionsList', "Permission"
+    'UserRole', 'UserAccess', 'UserRoleCreate', 'UserRoleBase', "Permission"
 ]

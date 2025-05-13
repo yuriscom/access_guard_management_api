@@ -7,12 +7,13 @@ from sqlalchemy.orm import Session
 
 from access_manager_api.infra.error_handling import UnauthorizedException, NotFoundException
 from access_manager_api.models import User as UserModel
-from access_manager_api.routes.dependencies import get_user, build_resource_path, get_request_headers
+from access_manager_api.routes.dependencies import get_user, get_request_headers
 from access_manager_api.schemas import IAMResource, IAMResourceCreate
 from access_manager_api.schemas.resource import IAMResourceUpdate
 from access_manager_api.infra.access_guard import get_access_guard_enforcer
 from access_manager_api.infra.database import get_db
 from access_manager_api.services.resource import IAMResourceService
+from access_manager_api.utils.utils import build_resource_path
 from access_manager_api.utils.webhooks import send_policy_refresh_webhook
 
 router = APIRouter(prefix="/iam/resources", tags=["iam-resources"])
@@ -32,7 +33,12 @@ async def create_resource(
         raise UnauthorizedException(str(e))
 
     resource_service = IAMResourceService(db, policy_refresh_hook=send_policy_refresh_webhook)
-    db_resource = await resource_service.create_resource(resource)
+
+    if resource.actions:
+        db_resource = await resource_service.create_or_get_resource_with_actions(resource)
+    else:
+        db_resource = await resource_service.create_resource(resource)
+
     return IAMResource.from_orm(db_resource)
 
 

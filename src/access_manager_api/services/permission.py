@@ -19,27 +19,32 @@ class IAMPermissionService:
         self.db = db
         self.policy_refresh_hook = policy_refresh_hook
 
-    async def create_permission(self, permission: IAMPermissionCreate) -> IAMPermission:
+    async def create_permission(self, permission: IAMPermissionCreate, commit: bool = True) -> IAMPermission:
         db_permission = IAMPermission(
             resource_id=permission.resource_id,
             action=permission.action
         )
-        try:
-            self.db.add(db_permission)
-            self.db.commit()
-            self.db.refresh(db_permission)
-            if self.policy_refresh_hook:
-                asyncio.create_task(
-                    self.policy_refresh_hook(db_permission.resource.scope, db_permission.resource.app_id, self.db)
-                )
-            return db_permission
-        except IntegrityError:
-            self.db.rollback()
-            raise AlreadyExistsException("Permission already exists")
-        except Exception as e:
-            self.db.rollback()
-            print(f"Unhandled error: {e}")
-            raise UnknownException()
+
+        self.db.add(db_permission)
+
+        if commit:
+            try:
+                self.db.commit()
+                self.db.refresh(db_permission)
+                if self.policy_refresh_hook:
+                    asyncio.create_task(
+                        self.policy_refresh_hook(db_permission.resource.scope, db_permission.resource.app_id, self.db)
+                    )
+            except IntegrityError:
+                self.db.rollback()
+                raise AlreadyExistsException(f"Permission already exists {permission.action}")
+            except Exception as e:
+                self.db.rollback()
+                print(f"Unhandled error: {e}")
+                raise UnknownException()
+        else:
+            self.db.flush()
+        return db_permission
 
     def get_permission_by_id(self, permission_id: str) -> Optional[IAMPermission]:
         # return self.db.query(IAMPermission).filter(IAMPermission.id == permission_id).first()
@@ -50,6 +55,12 @@ class IAMPermissionService:
 
     def get_permissions_by_resource(self, resource_id: str) -> List[IAMPermission]:
         return self.db.query(IAMPermission).filter(IAMPermission.resource_id == resource_id).all()
+
+    def get_permissions_by_resource_and_actions(self, resource_id: str, action_names: List[str]) -> List[IAMPermission]:
+        return self.db.query(IAMPermission).filter(
+                    IAMPermission.resource_id == resource_id,
+                    IAMPermission.action.in_(action_names)
+                ).all()
 
     def update_permission_by_id(self, permission_id: str, permission: IAMPermissionUpdate) -> Optional[IAMPermission]:
         db_permission = self.get_permission_by_id(permission_id)

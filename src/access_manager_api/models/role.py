@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text
 from sqlalchemy.orm import relationship, mapped_column
 from access_manager_api.models.base import Base
 from access_manager_api.models.enums import Scope
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 import uuid
 
 class IAMRole(Base):
@@ -14,7 +14,7 @@ class IAMRole(Base):
     role_name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     synthetic = Column(Boolean, nullable=True)
-    synthetic_pattern = Column(Text, nullable=True)
+    synthetic_data = Column(JSONB, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationships

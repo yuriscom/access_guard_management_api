@@ -1,16 +1,16 @@
+import uuid
 from datetime import datetime
 from typing import Optional
-
-from pydantic import BaseModel, Field
 
 from access_manager_api.schemas.common import PolicyEffect
 from access_manager_api.schemas.permission import IAMPermission
 from access_manager_api.schemas.role import IAMRole
+from pydantic import BaseModel, Field
 
 
 class IAMRolePermissionBase(BaseModel):
-    role_id: str
-    permission_id: str
+    role_id: uuid.UUID
+    permission_id: uuid.UUID
     effect: PolicyEffect = Field(default=PolicyEffect.ALLOW)
 
 
@@ -26,7 +26,7 @@ class IAMRolePermissionUpdate(BaseModel):
 
 
 class IAMRolePermission(IAMRolePermissionBase):
-    id: str
+    id: uuid.UUID
     created_at: datetime
     role: Optional[IAMRole] = None
     permission: Optional[IAMPermission] = None
